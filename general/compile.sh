@@ -1,0 +1,3 @@
+#!/bin/bash
+
+g++ ./main.cpp ../source/system.cpp ../source/electrodes.cpp ../source/experiment.cpp ../source/coefs_alpha_beta.cpp ../source/simulation.cpp -O3 -std=c++11
