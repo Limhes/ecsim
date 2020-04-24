@@ -25,27 +25,27 @@ int main()
     //g_sim->setPotentialSizing(_deltatheta);
     //g_sim->setDifferentialOrders(static_cast<size_t>(_numcurr), static_cast<size_t>(_numderiv));
     
-    // add chemical species to the system (name, initial concentration [mol/m3], diffusion coefficient [m2/s]):
-    g_sim->sys->addSpecies( new Species("ox", 1.0, 1.0e-9) );
-    g_sim->sys->addSpecies( new Species("red", 0.0, 1.0e-9) );
-    g_sim->sys->addSpecies( new Species("product", 0.0, 1.0e-9) );
+    // define chemical species (name, initial concentration [mol/m3], diffusion coefficient [m2/s]):
+    Species* spec_ox   = new Species("ox", 1.0, 1.0e-9);
+    Species* spec_red  = new Species("red", 0.0, 1.0e-9);
+    Species* spec_prod = new Species("product", 0.0, 1.0e-9);
+    
+    // add chemical species to the system:
+    g_sim->sys->addSpecies(spec_ox);
+    g_sim->sys->addSpecies(spec_red);
+    g_sim->sys->addSpecies(spec_prod);
+    // a pointer to the species can now be obtained by name:
+    //Species* spec_red_new = g_sim->sys->getSpeciesByName("red");
     
     // add redox steps (oxidized species, reduced species,
     //                  number of electrons, standard potential [V],
     //                  ke [m/s], alpha [-], unused bool)):
-    // names should match the ones used in sys->addSpecies(...)
-    Redox* redox = new Redox(g_sim->sys->getSpeciesByName("ox"),
-                             g_sim->sys->getSpeciesByName("red"),
-                             1, -0.5, 1.0, 0.5, false);
+    Redox* redox = new Redox(spec_ox, spec_red, 1, -0.5, 1.0, 0.5, false);
     redox->enabled = true;
     g_sim->sys->addRedox(redox);
     
     // add homogeneous reactions of the form A+B <-> C+D (A, B, C, D, k_f, k_b)
-    // names should match the ones used in sys->addSpecies(...)
-    Reaction* rxn = new Reaction(g_sim->sys->getSpeciesByName("red"),
-                                 g_sim->sys->getSpeciesByName(""),
-                                 g_sim->sys->getSpeciesByName("product"),
-                                 g_sim->sys->getSpeciesByName(""),
+    Reaction* rxn = new Reaction(spec_red, nullptr, spec_prod, nullptr, // pass nullptr for "no species"
                                  10.0, 0.0); // forward, backward rate constant
     rxn->enabled = true;
     g_sim->sys->addReaction(rxn);
@@ -60,6 +60,12 @@ int main()
     size_t sz = g_sim->run(current, potential);
     
     // voltammogram stored in current/potential vectors
+    std::cout << std::fixed << std::setprecision(4);
+    std::cout << "V [V]:   I [uA]:" << std::endl;
+    for (int i = 0; i < 5; i++) {
+        std::cout << potential[i] << "     " << current[i]*1.0e6 << std::endl;
+    }
+    std::cout << ".....   ....." << std::endl;
 
     return 0;
 }
