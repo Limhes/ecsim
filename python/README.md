@@ -11,6 +11,6 @@ A Python wrapper around ecsim. Documentation can be found in `/docs/`
 
 ## dependencies
 
-Dependencies:
+To compile the module:
 
 1. pybind11
