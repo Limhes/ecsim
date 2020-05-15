@@ -97,6 +97,10 @@ PYBIND11_MODULE(pyecsim, m) {
     :rtype: pyecsim.Redox
 )mydelimiter")
         .def(py::init([](Species* ox, Species* red, int n_e, double E, double k_e, double alpha) { return new Redox(ox, red, n_e, E, k_e, alpha, false); }))
+        .def_readwrite("n", &Redox::numberElectrons, "Number of electrons [-]")
+        .def_readwrite("E", &Redox::standardPotential, "Standard potential [V]")
+        .def_readwrite("k_e", &Redox::rateConstantHetero, "Heterogeneous rate constant [m/s]")
+        .def_readwrite("alpha", &Redox::alpha, "Symmetry parameter [-] (0.0 <= alpha <= 1.0)")
         .def("enable", [](Redox &rdx) { rdx.enabled = true; return rdx; }, "Enables the electron transfer step and returns the modified Redox object")
         .def("disable", [](Redox &rdx) { rdx.enabled = false; return rdx; }, "Disables the electron transfer step and returns the modified Redox object");
 

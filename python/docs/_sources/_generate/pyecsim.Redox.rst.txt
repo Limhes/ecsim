@@ -10,6 +10,12 @@ pyecsim.Redox
     .. automethod:: enable
     .. automethod:: disable
     
+    .. rubric:: Attributes
+
+    .. autoattribute:: k_e
+    .. autoattribute:: n
+    .. autoattribute:: E
+    .. autoattribute:: alpha
    
    
    
