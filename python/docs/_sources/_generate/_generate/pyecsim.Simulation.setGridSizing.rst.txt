@@ -1,0 +1,6 @@
+pyecsim.Simulation.setGridSizing
+================================
+
+.. currentmodule:: pyecsim
+
+.. automethod:: Simulation.setGridSizing

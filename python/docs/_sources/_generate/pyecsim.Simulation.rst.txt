@@ -1,0 +1,22 @@
+pyecsim.Simulation
+==================
+
+.. currentmodule:: pyecsim
+
+.. autoclass:: Simulation
+   
+    .. rubric:: Methods
+
+    .. automethod:: run
+    .. automethod:: metrics
+    .. automethod:: setDifferentialOrders
+    .. automethod:: setGridSizing
+    .. automethod:: setPotentialSizing
+
+    .. rubric:: Attributes
+
+    .. autoattribute:: el
+    .. autoattribute:: env
+    .. autoattribute:: exper
+    .. autoattribute:: sys
+   

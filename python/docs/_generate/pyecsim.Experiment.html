@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>pyecsim.Experiment &#8212; pyecsim 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyecsim.Species" href="pyecsim.Species.html" />
+    <link rel="prev" title="pyecsim.Environment" href="pyecsim.Environment.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="pyecsim-experiment">
+<h1>pyecsim.Experiment<a class="headerlink" href="#pyecsim-experiment" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="pyecsim.Experiment">
+<em class="property">class </em><code class="sig-prename descclassname">pyecsim.</code><code class="sig-name descname">Experiment</code> &#x2192; <a class="reference internal" href="#pyecsim.Experiment" title="pyecsim.Experiment">pyecsim.Experiment</a><a class="headerlink" href="#pyecsim.Experiment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create voltammetry (LSV &amp; CV) Experiment object (all values are initialized as 0.0)</p>
+<p>A voltammetry experiment is run as the following sequence:</p>
+<ul class="simple">
+<li><p>If conditioning_time &gt; 0: hold potential at conditioning_potential [V] for conditioning_time [s]</p></li>
+<li><p>If equilibration_time &gt; 0: apply no potential for equilibration_time [s]</p></li>
+<li><dl class="simple">
+<dt>Repeat num_cycles times (and record current in the last cycle only):</dt><dd><ul>
+<li><p>Set potential to initial_potential [V]</p></li>
+<li><dl class="simple">
+<dt>For each vertex_potential in vertex_potentials:</dt><dd><ul>
+<li><p>Scan to vertex_potential [V] at scan_rate [V/s]</p></li>
+<li><p>Hold potential at vertex_potential [V] for vertex_delay [s]</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Scan to final_potential [V] at scan_rate [V/s]</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>newly generated experiment</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyecsim.Experiment" title="pyecsim.Experiment">pyecsim.Experiment</a></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Note that this implies that if initial_potential is not equal to final_potential and num_cycles &gt; 1, the potential jumps, which can lead to non-physical behaviour.</p>
+</div>
+<p class="rubric">Methods</p>
+<dl class="py method">
+<dt id="pyecsim.Experiment.setConditioning">
+<code class="sig-name descname">setConditioning</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ct</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">cp</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyecsim.Experiment.setConditioning" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set electrode conditioning time and potential</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ct</strong> (<em>float</em>) – conditioning time [s]</p></li>
+<li><p><strong>cp</strong> (<em>float</em>) – conditioning potential [V]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.Experiment.setEquilibration">
+<code class="sig-name descname">setEquilibration</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">et</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyecsim.Experiment.setEquilibration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set equilibration time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>et</strong> (<em>float</em>) – equilibration time [s]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.Experiment.setScanPotentials">
+<code class="sig-name descname">setScanPotentials</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ip</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">vp</span><span class="p">:</span> <span class="n">List<span class="p">[</span>float<span class="p">]</span></span></em>, <em class="sig-param"><span class="n">fp</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyecsim.Experiment.setScanPotentials" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set CV scan potentials</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ip</strong> (<em>float</em>) – initial potential [V]</p></li>
+<li><p><strong>vp</strong> (<em>List</em><em>[</em><em>float</em><em>]</em>) – vertex potentials [V], pass empty list for linear sweep voltammetry</p></li>
+<li><p><strong>fp</strong> (<em>float</em>) – final potential [V]</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.Experiment.setScanRate">
+<code class="sig-name descname">setScanRate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sr</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyecsim.Experiment.setScanRate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set scan rate of voltammetry scan</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sr</strong> (<em>float</em>) – scan rate  [V/s]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.Experiment.setNumCycles">
+<code class="sig-name descname">setNumCycles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">nc</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyecsim.Experiment.setNumCycles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set number of CV scan cycles</p>
+<p>Current is only recorded on the last scan</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nc</strong> (<em>int</em>) – number of repetitive voltammetry scans [-] (nc &gt;= 1)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.Experiment.setVertexDelay">
+<code class="sig-name descname">setVertexDelay</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">vd</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyecsim.Experiment.setVertexDelay" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set vertex delay time for vertices in cyclic voltammetry scan</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>vd</strong> (<em>float</em>) – vertex delay [s]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.Experiment.totalTime">
+<code class="sig-name descname">totalTime</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; float<a class="headerlink" href="#pyecsim.Experiment.totalTime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get total experiment time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>total duration of voltammetry experiment including conditioning and equilibration [s]</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">pyecsim</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Simulation.html">pyecsim.Simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.System.html">pyecsim.System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Electrode.html">pyecsim.Electrode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Environment.html">pyecsim.Environment</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">pyecsim.Experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Species.html">pyecsim.Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Reaction.html">pyecsim.Reaction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Redox.html">pyecsim.Redox</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="pyecsim.Environment.html" title="previous chapter">pyecsim.Environment</a></li>
+      <li>Next: <a href="pyecsim.Species.html" title="next chapter">pyecsim.Species</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, René Becker.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_generate/pyecsim.Experiment.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

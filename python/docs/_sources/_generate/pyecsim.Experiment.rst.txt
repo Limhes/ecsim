@@ -1,0 +1,22 @@
+pyecsim.Experiment
+==================
+
+.. currentmodule:: pyecsim
+
+.. autoclass:: Experiment
+
+    .. rubric:: Methods
+
+    .. automethod:: setConditioning
+    .. automethod:: setEquilibration
+    .. automethod:: setScanPotentials
+    .. automethod:: setScanRate
+    .. automethod:: setNumCycles
+    .. automethod:: setVertexDelay
+    .. automethod:: totalTime
+    
+   
+
+   
+   
+   

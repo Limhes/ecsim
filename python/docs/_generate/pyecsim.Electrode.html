@@ -1,0 +1,237 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>pyecsim.Electrode &#8212; pyecsim 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyecsim.Environment" href="pyecsim.Environment.html" />
+    <link rel="prev" title="pyecsim.System" href="pyecsim.System.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="pyecsim-electrode">
+<h1>pyecsim.Electrode<a class="headerlink" href="#pyecsim-electrode" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="pyecsim.Electrode">
+<em class="property">class </em><code class="sig-prename descclassname">pyecsim.</code><code class="sig-name descname">Electrode</code> &#x2192; <a class="reference internal" href="#pyecsim.Electrode" title="pyecsim.Electrode">pyecsim.Electrode</a><a class="headerlink" href="#pyecsim.Electrode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create Electrode object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>newly generated electrode</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyecsim.Electrode" title="pyecsim.Electrode">pyecsim.Electrode</a></p>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<dl class="py method">
+<dt id="pyecsim.Electrode.cylinder">
+<code class="sig-name descname">cylinder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">length</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#pyecsim.Electrode" title="pyecsim.Electrode">pyecsim.Electrode</a><a class="headerlink" href="#pyecsim.Electrode.cylinder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set cylindrical electrode</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>radius</strong> (<em>float</em>) – radius [m]</p></li>
+<li><p><strong>length</strong> (<em>float</em>) – length [m]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>modified electrode</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyecsim.Electrode" title="pyecsim.Electrode">pyecsim.Electrode</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.Electrode.disk">
+<code class="sig-name descname">disk</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#pyecsim.Electrode" title="pyecsim.Electrode">pyecsim.Electrode</a><a class="headerlink" href="#pyecsim.Electrode.disk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set disk electrode</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>radius</strong> (<em>float</em>) – radius [m]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>modified electrode</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyecsim.Electrode" title="pyecsim.Electrode">pyecsim.Electrode</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.Electrode.hemisphere">
+<code class="sig-name descname">hemisphere</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#pyecsim.Electrode" title="pyecsim.Electrode">pyecsim.Electrode</a><a class="headerlink" href="#pyecsim.Electrode.hemisphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set hemispherical electrode</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>radius</strong> (<em>float</em>) – radius [m]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>modified electrode</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyecsim.Electrode" title="pyecsim.Electrode">pyecsim.Electrode</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.Electrode.rectangle">
+<code class="sig-name descname">rectangle</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">width</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">height</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#pyecsim.Electrode" title="pyecsim.Electrode">pyecsim.Electrode</a><a class="headerlink" href="#pyecsim.Electrode.rectangle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set rectangular electrode</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> (<em>float</em>) – width [m]</p></li>
+<li><p><strong>height</strong> (<em>float</em>) – height [m]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>modified electrode</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyecsim.Electrode" title="pyecsim.Electrode">pyecsim.Electrode</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.Electrode.sphere">
+<code class="sig-name descname">sphere</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">radius</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#pyecsim.Electrode" title="pyecsim.Electrode">pyecsim.Electrode</a><a class="headerlink" href="#pyecsim.Electrode.sphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set spherical electrode</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>radius</strong> (<em>float</em>) – radius [m]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>modified electrode</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyecsim.Electrode" title="pyecsim.Electrode">pyecsim.Electrode</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.Electrode.square">
+<code class="sig-name descname">square</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">width</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#pyecsim.Electrode" title="pyecsim.Electrode">pyecsim.Electrode</a><a class="headerlink" href="#pyecsim.Electrode.square" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set square electrode</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>width</strong> (<em>float</em>) – width [m]</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>modified electrode</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyecsim.Electrode" title="pyecsim.Electrode">pyecsim.Electrode</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">pyecsim</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Simulation.html">pyecsim.Simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.System.html">pyecsim.System</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">pyecsim.Electrode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Environment.html">pyecsim.Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Experiment.html">pyecsim.Experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Species.html">pyecsim.Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Reaction.html">pyecsim.Reaction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Redox.html">pyecsim.Redox</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="pyecsim.System.html" title="previous chapter">pyecsim.System</a></li>
+      <li>Next: <a href="pyecsim.Environment.html" title="next chapter">pyecsim.Environment</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, René Becker.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_generate/pyecsim.Electrode.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

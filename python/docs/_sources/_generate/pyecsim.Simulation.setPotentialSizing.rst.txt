@@ -1,0 +1,6 @@
+pyecsim.Simulation.setPotentialSizing
+=====================================
+
+.. currentmodule:: pyecsim
+
+.. automethod:: Simulation.setPotentialSizing

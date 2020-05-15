@@ -1,0 +1,268 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>pyecsim.System &#8212; pyecsim 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyecsim.Electrode" href="pyecsim.Electrode.html" />
+    <link rel="prev" title="pyecsim.Simulation" href="pyecsim.Simulation.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="pyecsim-system">
+<h1>pyecsim.System<a class="headerlink" href="#pyecsim-system" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="pyecsim.System">
+<em class="property">class </em><code class="sig-prename descclassname">pyecsim.</code><code class="sig-name descname">System</code> &#x2192; <a class="reference internal" href="#pyecsim.System" title="pyecsim.System">pyecsim.System</a><a class="headerlink" href="#pyecsim.System" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create System object containing all species, reactions and redox steps.</p>
+<p>Before the simulation starts, the system is brought into a state of chemical equilibrium.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>newly generated chemical/electrochemical system</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#pyecsim.System" title="pyecsim.System">pyecsim.System</a></p>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<dl class="py method">
+<dt id="pyecsim.System.addReaction">
+<code class="sig-name descname">addReaction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rxn</span><span class="p">:</span> <span class="n"><a class="reference internal" href="pyecsim.Reaction.html#pyecsim.Reaction" title="pyecsim.Reaction">pyecsim.Reaction</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#pyecsim.System" title="pyecsim.System">pyecsim.System</a><a class="headerlink" href="#pyecsim.System.addReaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add single reaction to the system</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>rxn</strong> (<a class="reference internal" href="pyecsim.Reaction.html#pyecsim.Reaction" title="pyecsim.Reaction"><em>pyecsim.Reaction</em></a>) – reaction to be added to the system</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the modified system</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyecsim.System" title="pyecsim.System">pyecsim.System</a></p>
+</dd>
+</dl>
+<p>addReaction(rxn_list:List[pyecsim.Reaction]) -&gt; pyecsim.System
+Add multiple reactions to the system</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>rxn_list</strong> (<em>List</em><em>[</em><a class="reference internal" href="pyecsim.Reaction.html#pyecsim.Reaction" title="pyecsim.Reaction"><em>pyecsim.Reaction</em></a><em>]</em>) – list of reactions to be added to the system</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the modified system</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyecsim.System" title="pyecsim.System">pyecsim.System</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.System.addRedox">
+<code class="sig-name descname">addRedox</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">red</span><span class="p">:</span> <span class="n"><a class="reference internal" href="pyecsim.Redox.html#pyecsim.Redox" title="pyecsim.Redox">pyecsim.Redox</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#pyecsim.System" title="pyecsim.System">pyecsim.System</a><a class="headerlink" href="#pyecsim.System.addRedox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add single electron transfer step to the system</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>red</strong> (<a class="reference internal" href="pyecsim.Redox.html#pyecsim.Redox" title="pyecsim.Redox"><em>pyecsim.Redox</em></a>) – electron transfer step to be added to the system</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the modified system</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyecsim.System" title="pyecsim.System">pyecsim.System</a></p>
+</dd>
+</dl>
+<p>addRedox(red_list:List[pyecsim.Redox]) -&gt; pyecsim.System
+Add multiple electron transfer steps to the system</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>red_list</strong> (<em>List</em><em>[</em><a class="reference internal" href="pyecsim.Redox.html#pyecsim.Redox" title="pyecsim.Redox"><em>pyecsim.Redox</em></a><em>]</em>) – list of electron transfer steps to be added to the system</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the modified system</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyecsim.System" title="pyecsim.System">pyecsim.System</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.System.addSpecies">
+<code class="sig-name descname">addSpecies</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">spec</span><span class="p">:</span> <span class="n"><a class="reference internal" href="pyecsim.Species.html#pyecsim.Species" title="pyecsim.Species">pyecsim.Species</a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#pyecsim.System" title="pyecsim.System">pyecsim.System</a><a class="headerlink" href="#pyecsim.System.addSpecies" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add single species to the system</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>spec</strong> (<a class="reference internal" href="pyecsim.Species.html#pyecsim.Species" title="pyecsim.Species"><em>pyecsim.Species</em></a>) – species to be added to the system</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the modified system</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyecsim.System" title="pyecsim.System">pyecsim.System</a></p>
+</dd>
+</dl>
+<p>addSpecies(spec_list:List[pyecsim.Species]) -&gt; pyecsim.System
+Add multiple species to the system</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>spec_list</strong> (<em>List</em><em>[</em><a class="reference internal" href="pyecsim.Species.html#pyecsim.Species" title="pyecsim.Species"><em>pyecsim.Species</em></a><em>]</em>) – list of species to be added to the system</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the modified system</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyecsim.System" title="pyecsim.System">pyecsim.System</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.System.generateUniqueSpeciesName">
+<code class="sig-name descname">generateUniqueSpeciesName</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="headerlink" href="#pyecsim.System.generateUniqueSpeciesName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate unique species name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a species name that is guaranteed to be not present in current system</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.System.getSpeciesByName">
+<code class="sig-name descname">getSpeciesByName</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="pyecsim.Species.html#pyecsim.Species" title="pyecsim.Species">pyecsim.Species</a><a class="headerlink" href="#pyecsim.System.getSpeciesByName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get species reference by name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>String</em>) – name of the species</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>reference to the species</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="pyecsim.Species.html#pyecsim.Species" title="pyecsim.Species">pyecsim.Species</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.System.isSpeciesPresentWithName">
+<code class="sig-name descname">isSpeciesPresentWithName</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="p">:</span> <span class="n">str</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="headerlink" href="#pyecsim.System.isSpeciesPresentWithName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether species with this name exists</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>String</em>) – name of the species</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>True if species with name is present in system</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">pyecsim</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Simulation.html">pyecsim.Simulation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">pyecsim.System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Electrode.html">pyecsim.Electrode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Environment.html">pyecsim.Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Experiment.html">pyecsim.Experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Species.html">pyecsim.Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Reaction.html">pyecsim.Reaction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Redox.html">pyecsim.Redox</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="pyecsim.Simulation.html" title="previous chapter">pyecsim.Simulation</a></li>
+      <li>Next: <a href="pyecsim.Electrode.html" title="next chapter">pyecsim.Electrode</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, René Becker.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_generate/pyecsim.System.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,6 @@
+pyecsim.Simulation.setDifferentialOrders
+========================================
+
+.. currentmodule:: pyecsim
+
+.. automethod:: Simulation.setDifferentialOrders

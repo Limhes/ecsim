@@ -1,0 +1,6 @@
+pyecsim.Simulation.\_\_init\_\_
+===============================
+
+.. currentmodule:: pyecsim
+
+.. automethod:: Simulation.__init__

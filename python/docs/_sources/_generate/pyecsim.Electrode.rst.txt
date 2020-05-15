@@ -1,0 +1,21 @@
+pyecsim.Electrode
+=================
+
+.. currentmodule:: pyecsim
+
+.. autoclass:: Electrode
+   
+    .. rubric:: Methods
+    
+    .. automethod:: cylinder
+    .. automethod:: disk
+    .. automethod:: hemisphere
+    .. automethod:: rectangle
+    .. automethod:: sphere
+    .. automethod:: square
+   
+   
+
+   
+   
+   

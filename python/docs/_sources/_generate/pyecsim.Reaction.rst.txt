@@ -1,0 +1,18 @@
+pyecsim.Reaction
+================
+
+.. currentmodule:: pyecsim
+
+.. autoclass:: Reaction
+
+    .. rubric:: Methods
+
+    .. automethod:: enable
+    .. automethod:: disable
+    
+    .. rubric:: Attributes
+
+    .. autoattribute:: rateConstantBackward
+    .. autoattribute:: rateConstantForward
+   
+   

@@ -1,0 +1,14 @@
+pyecsim.Species
+===============
+
+.. currentmodule:: pyecsim
+
+.. autoclass:: Species
+   
+    .. rubric:: Attributes
+
+    .. autoattribute:: normConc
+    .. autoattribute:: normDiffCoeff
+    .. autoattribute:: normEquilConc
+    
+   

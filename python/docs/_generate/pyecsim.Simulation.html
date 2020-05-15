@@ -1,0 +1,250 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>pyecsim.Simulation &#8212; pyecsim 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pyecsim.System" href="pyecsim.System.html" />
+    <link rel="prev" title="pyecsim" href="../index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="pyecsim-simulation">
+<h1>pyecsim.Simulation<a class="headerlink" href="#pyecsim-simulation" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="pyecsim.Simulation">
+<em class="property">class </em><code class="sig-prename descclassname">pyecsim.</code><code class="sig-name descname">Simulation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">verbose</span><span class="p">:</span> <span class="n">bool</span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#pyecsim.Simulation" title="pyecsim.Simulation">pyecsim.Simulation</a><a class="headerlink" href="#pyecsim.Simulation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create Simulation object</p>
+<ul class="simple">
+<li><p>The core of the simulation is an implementation of Molina et al. “Brute force (or not so brute) digital simulation in electrochemistry revisited” Chemical Physics Letters 643 (2016) 71–76 (DOI: 10.1016/j.cplett.2015.11.011)</p></li>
+<li><p>Various practicalities were implemented according to: Britz “Digital Simulation in Electrochemistry” and Compton “Understanding Voltammetry - Simulation of Electrode Processes”</p></li>
+<li><p>Second-order homogeneous reactions are implemented as Laasonen linearizations (Britz p. 165+)</p></li>
+<li><p>Species concentrations are equilibrated before the simulation starts</p></li>
+<li><p>Electron transfer is implemented as Butler-Volmer kinetics</p></li>
+<li><p>Current contributions are solved in a generic way by writing Compton p. 117-119 in matrix form</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>verbose</strong> (<em>bool</em>) – False to suppress all output</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>newly generated simulation</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#pyecsim.Simulation" title="pyecsim.Simulation">pyecsim.Simulation</a></p>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<dl class="py method">
+<dt id="pyecsim.Simulation.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyecsim.Simulation.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run the simulation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the voltammetry simulation potentials and corresponding currents as [potentials, currents]</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>List of List of Float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.Simulation.metrics">
+<code class="sig-name descname">metrics</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; List<span class="p">[</span>float<span class="p">]</span><a class="headerlink" href="#pyecsim.Simulation.metrics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns metrics recorded during the simulation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>maximum and minimum currents recorded and the corresponding potentials [max. current, potential at max. current, min. current, potential at min. current]</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>List[float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.Simulation.setDifferentialOrders">
+<code class="sig-name descname">setDifferentialOrders</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_curr</span><span class="p">:</span> <span class="n">int</span></em>, <em class="sig-param"><span class="n">num_diff</span><span class="p">:</span> <span class="n">int</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyecsim.Simulation.setDifferentialOrders" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set differential orders for current and diffusion calculations</p>
+<p>cf. Molina paper</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_curr</strong> (<em>Integer</em>) – number of points for current differential</p></li>
+<li><p><strong>num_diff</strong> (<em>Integer</em>) – number of points for diffusion differential</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>For advanced users only</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.Simulation.setGridSizing">
+<code class="sig-name descname">setGridSizing</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gamma_e</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">minF</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">maxF</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">minlograte</span><span class="p">:</span> <span class="n">float</span></em>, <em class="sig-param"><span class="n">maxlograte</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyecsim.Simulation.setGridSizing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set exponential grid parameters</p>
+<p>cf. the Molina paper, Britz and Compton books and the settings tab on <a class="reference external" href="http://limhes.net/ecsim/">http://limhes.net/ecsim/</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>gamma</strong> (<em>Float</em>) – grid expansion factor in x_i = h * (gamma_e^i - 1) / (gamma_e - 1) with gamma_e &gt; 1.0</p></li>
+<li><p><strong>minF</strong> (<em>Float</em>) – see the settings tab on <a class="reference external" href="http://limhes.net/ecsim/">http://limhes.net/ecsim/</a></p></li>
+<li><p><strong>maxF</strong> (<em>Float</em>) – see the settings tab on <a class="reference external" href="http://limhes.net/ecsim/">http://limhes.net/ecsim/</a></p></li>
+<li><p><strong>minlograte</strong> (<em>Float</em>) – see the settings tab on <a class="reference external" href="http://limhes.net/ecsim/">http://limhes.net/ecsim/</a></p></li>
+<li><p><strong>maxlograte</strong> (<em>Float</em>) – see the settings tab on <a class="reference external" href="http://limhes.net/ecsim/">http://limhes.net/ecsim/</a></p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>For advanced users only</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="pyecsim.Simulation.setPotentialSizing">
+<code class="sig-name descname">setPotentialSizing</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">deltatheta</span><span class="p">:</span> <span class="n">float</span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyecsim.Simulation.setPotentialSizing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set dimensionless potential step</p>
+<p>cf. Britz and Compton books and the settings tab on <a class="reference external" href="http://limhes.net/ecsim/">http://limhes.net/ecsim/</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>deltatheta</strong> (<em>Float</em>) – dimensionless potential step</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>For advanced users only</p>
+</div>
+</dd></dl>
+
+<p class="rubric">Attributes</p>
+<dl class="py attribute">
+<dt id="pyecsim.Simulation.el">
+<code class="sig-name descname">el</code><a class="headerlink" href="#pyecsim.Simulation.el" title="Permalink to this definition">¶</a></dt>
+<dd><p>In-built Electrode object</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pyecsim.Simulation.env">
+<code class="sig-name descname">env</code><a class="headerlink" href="#pyecsim.Simulation.env" title="Permalink to this definition">¶</a></dt>
+<dd><p>In-built Environment object</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pyecsim.Simulation.exper">
+<code class="sig-name descname">exper</code><a class="headerlink" href="#pyecsim.Simulation.exper" title="Permalink to this definition">¶</a></dt>
+<dd><p>In-built Experiment object</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="pyecsim.Simulation.sys">
+<code class="sig-name descname">sys</code><a class="headerlink" href="#pyecsim.Simulation.sys" title="Permalink to this definition">¶</a></dt>
+<dd><p>In-built System object</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">pyecsim</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">pyecsim.Simulation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.System.html">pyecsim.System</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Electrode.html">pyecsim.Electrode</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Environment.html">pyecsim.Environment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Experiment.html">pyecsim.Experiment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Species.html">pyecsim.Species</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Reaction.html">pyecsim.Reaction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pyecsim.Redox.html">pyecsim.Redox</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../index.html" title="previous chapter">pyecsim</a></li>
+      <li>Next: <a href="pyecsim.System.html" title="next chapter">pyecsim.System</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, René Becker.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.0.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_generate/pyecsim.Simulation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

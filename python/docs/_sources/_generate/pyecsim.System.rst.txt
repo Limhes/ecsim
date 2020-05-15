@@ -1,0 +1,20 @@
+pyecsim.System
+==============
+
+.. currentmodule:: pyecsim
+
+.. autoclass:: System
+   
+    .. rubric:: Methods
+
+    .. automethod:: addReaction
+    .. automethod:: addRedox
+    .. automethod:: addSpecies
+    .. automethod:: generateUniqueSpeciesName
+    .. automethod:: getSpeciesByName
+    .. automethod:: isSpeciesPresentWithName
+
+
+   
+   
+   

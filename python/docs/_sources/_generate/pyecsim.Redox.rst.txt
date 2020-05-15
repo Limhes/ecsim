@@ -1,0 +1,15 @@
+pyecsim.Redox
+=============
+
+.. currentmodule:: pyecsim
+
+.. autoclass:: Redox
+
+    .. rubric:: Methods
+
+    .. automethod:: enable
+    .. automethod:: disable
+    
+   
+   
+   
