@@ -1,6 +1,6 @@
 # pyecsim
 
-A Python wrapper around ecsim. Documentation can be found [here](https://limhes.github.com/pyecsim)
+A Python wrapper around ecsim. Documentation can be found [here](https://limhes.github.io/pyecsim)
 
 ## how to use
 
