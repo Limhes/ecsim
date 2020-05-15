@@ -1,6 +1,0 @@
-pyecsim.Simulation.run
-======================
-
-.. currentmodule:: pyecsim
-
-.. automethod:: Simulation.run

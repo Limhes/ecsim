@@ -1,6 +1,0 @@
-pyecsim.Simulation.el
-=====================
-
-.. currentmodule:: pyecsim
-
-.. autoproperty:: Simulation.el

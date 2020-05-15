@@ -1,6 +1,0 @@
-pyecsim.Simulation.metrics
-==========================
-
-.. currentmodule:: pyecsim
-
-.. automethod:: Simulation.metrics

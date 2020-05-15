@@ -1,6 +1,0 @@
-pyecsim.Simulation.exper
-========================
-
-.. currentmodule:: pyecsim
-
-.. autoproperty:: Simulation.exper
