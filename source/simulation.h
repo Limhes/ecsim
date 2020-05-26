@@ -78,13 +78,13 @@ private:
 public:
     double ipc, ipa, Epc, Epa; // for electroanalytical purposes (set during run())
 
-    Environment *env;
-    Electrode *el;
-    Experiment *exper;
-    System *sys;
+    Environment env;
+    Electrode el;
+    Experiment exper;
+    System sys;
     
-    Simulation(ostream &_output) : output_stream( _output ), env( new Environment() ), el( new Electrode() ), exper( new Experiment() ), sys( new System() ) {}
-    ~Simulation() { delete env; delete el; delete exper; delete sys; }
+    Simulation(ostream &_output) : output_stream( _output ) {}
+    ~Simulation() {}
 
     void setGridSizing(double _gamma, double _minF, double _maxF, double _minlograte, double _maxlograte)
         { paramGamma = _gamma; minF = _minF; maxF = _maxF; minLogRate = _minlograte; maxLogRate = _maxlograte; }

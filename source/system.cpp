@@ -258,15 +258,3 @@ int System::equilibrateConcentrations()
 
     return iter;
 }
-
-
-/*===============================================================================================
- * DESTRUCT ALL
- *=============================================================================================*/
-
-System::~System()
-{
-    vecAllRedox.clear();
-    vecAllReactions.clear();
-    vecAllSpecies.clear();
-}

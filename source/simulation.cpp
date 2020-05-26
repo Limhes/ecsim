@@ -54,23 +54,23 @@ size_t Simulation::runSimulation(vector<double> &_current, vector<double> &_pote
     Epa = 0.0;
 
     // conditioning step:
-    delaySegment(exper->conditioningPotential, exper->conditioningTime);
+    delaySegment(exper.conditioningPotential, exper.conditioningTime);
     // equilibration step:
-    delaySegment(exper->initialPotential, exper->equilibrationTime);
+    delaySegment(exper.initialPotential, exper.equilibrationTime);
     // scan cycles:
-    for (int cycle = 0; cycle < exper->numCycles; cycle++) {
-        recordCurrent = (cycle == exper->numCycles - 1); // warning: hard-coded option to record current only of last cycle
+    for (int cycle = 0; cycle < exper.numCycles; cycle++) {
+        recordCurrent = (cycle == exper.numCycles - 1); // warning: hard-coded option to record current only of last cycle
 
-        segmentStartPotential = exper->initialPotential;
-        for (auto vp: exper->vertexPotentials) {
+        segmentStartPotential = exper.initialPotential;
+        for (auto vp: exper.vertexPotentials) {
             // scan up to vertex:
             scanSegment(segmentStartPotential, vp, recordCurrent, _current, _potential);
             segmentStartPotential = vp;
             // vertex delay:
-            delaySegment(vp, exper->vertexDelay);
+            delaySegment(vp, exper.vertexDelay);
         }
         // scan from last vertex to final potential:
-        scanSegment(segmentStartPotential, exper->finalPotential, recordCurrent, _current, _potential);
+        scanSegment(segmentStartPotential, exper.finalPotential, recordCurrent, _current, _potential);
     }
 
     return _current.size();
@@ -143,7 +143,7 @@ void Simulation::solveSystem(double theta)
 
 void Simulation::storeConcentrations()
 {
-    for (auto spec: sys->vecSpecies)
+    for (auto spec: sys.vecSpecies)
     {
         for (size_t x = 0; x < numGridPoints; x++)
         {
@@ -190,8 +190,8 @@ void Simulation::updateIndependentTerms()
 {
     size_t EndNormal = numGridPoints - numDerivPoints + 2;
 
-    //for(int s = 0; s < sys->num_species; s++)
-    for (auto spec: sys->vecSpecies)
+    //for(int s = 0; s < sys.num_species; s++)
+    for (auto spec: sys.vecSpecies)
     {
         //Zero at matrix rows storing surface conditions
         independentTerms[spec->index*numGridPoints] = 0;
@@ -223,7 +223,7 @@ void Simulation::updateRedoxInMatrix(double theta)
     // reset diagonal terms:
     fill(matrixB0DiagonalTerms.begin(), matrixB0DiagonalTerms.end(), 0.0);
 
-    for (auto redox: sys->vecRedox)
+    for (auto redox: sys.vecRedox)
     {
         p = static_cast<double>(redox->numberElectrons) * (theta - f * redox->standardPotential); // normalized potential
 
@@ -243,7 +243,7 @@ void Simulation::updateRedoxInMatrix(double theta)
     }
 
     // add diagonal terms:
-    for (auto spec: sys->vecSpecies)
+    for (auto spec: sys.vecSpecies)
     {
         if (speciesInRedox[spec->index]) // active redox species
         {
@@ -266,10 +266,10 @@ void Simulation::invertMatrix()
 double Simulation::calcCurrentFromFlux()
 {
     double totalflux, speciesflux, currentFromFlux;
-    currentFromFlux = el->epsilon * CONST_F * sys->maxDiffusionConstant * sys->maxConcentration;
+    currentFromFlux = el.epsilon * CONST_F * sys.maxDiffusionConstant * sys.maxConcentration;
 
     // determine flux per species:
-    for (auto spec: sys->vecSpecies)
+    for (auto spec: sys.vecSpecies)
     {
         speciesflux = 0;
         for(size_t kk = 0; kk < numCurrentPoints; kk++)
@@ -304,7 +304,7 @@ double Simulation::calcCurrentFromFlux()
 
     // sum to get total flux:
     totalflux = 0.0;
-    for (auto redox: sys->vecRedox)
+    for (auto redox: sys.vecRedox)
     {
         // this doesn't work well for n > 1 --> why not?
         totalflux -= currentContributionRedoxFlux[static_cast<Eigen::Index>(redox->index)]
@@ -340,23 +340,23 @@ void Simulation::prepareSimulation()
 void Simulation::initParametersEtc()
 {
     // some parameters
-    sys->finalize(el->epsilon);
-    f = CONST_F / (CONST_R * env->temperature);
-    totalTime = exper->totalTime();
-    totalTheta = f * totalTime * exper->scanRate;
-    paramR0 = el->epsilon / sqrt(sys->maxDiffusionConstant*totalTime);
+    sys.finalize(el.epsilon);
+    f = CONST_F / (CONST_R * env.temperature);
+    totalTime = exper.totalTime();
+    totalTheta = f * totalTime * exper.scanRate;
+    paramR0 = el.epsilon / sqrt(sys.maxDiffusionConstant*totalTime);
 
     /* system dimensioning according to Compton (Understanding Voltammetry)
      * deltaTheta is a fixed value, taken from Compton
      * to increase accuracy, we need to decrease deltaX, which doesn't need a lot of extra time to solve!!!
      * the factor F in deltaX = pow(10.0, -F-0.5*log10(sigma)); should e.g. go from 2.2 to 4.2
      */
-    double F,logRate = log10(sys->maxRateConstantChem);
+    double F,logRate = log10(sys.maxRateConstantChem);
     if (logRate < minLogRate) { F = minF; }
     else if (logRate <= maxLogRate) { F = minF + (logRate - minLogRate) * (maxF - minF) / (maxLogRate - minLogRate); }
     else { F = maxF; }
 
-    sigma = el->epsilon * el->epsilon / sys->maxDiffusionConstant * f * exper->scanRate; // dimensionless scan rate
+    sigma = el.epsilon * el.epsilon / sys.maxDiffusionConstant * f * exper.scanRate; // dimensionless scan rate
     maxT = totalTheta / sigma;
     deltaT = deltaTheta / sigma;
     maxX = 6.0*sqrt(maxT);
@@ -365,15 +365,15 @@ void Simulation::initParametersEtc()
     paramLambda = deltaT / (deltaX * deltaX);
 
     // print scaling parameters:
-    //output_stream << "Diff coeff [m2/s]: max = " << sys->maxDiffusionConstant << endl;
-    //output_stream << "Conc [mol/m3]: max = " << sys->maxConcentration << endl;
-    //output_stream << "Electrode [m]: epsilon = " << el->epsilon << ", area = " << el->electrodeArea << endl;
+    //output_stream << "Diff coeff [m2/s]: max = " << sys.maxDiffusionConstant << endl;
+    //output_stream << "Conc [mol/m3]: max = " << sys.maxConcentration << endl;
+    //output_stream << "Electrode [m]: epsilon = " << el.epsilon << ", area = " << el.electrodeArea << endl;
     output_stream << "Initial concentrations after equilibration: (";
-    for (auto spec: sys->vecSpecies)
-        output_stream << "[" << spec->name << "] = " << spec->normalizedAndEquilibratedConcentration << ((spec!=sys->vecSpecies.back())?", ":"");
+    for (auto spec: sys.vecSpecies)
+        output_stream << "[" << spec->name << "] = " << spec->normalizedAndEquilibratedConcentration << ((spec!=sys.vecSpecies.back())?", ":"");
     output_stream << ")<br />" << endl;
     output_stream << "V<sub>step</sub> [V] = " << deltaTheta/f << ", t<sub>max</sub> [s] = " << totalTime << ", " << endl;
-    output_stream << "r<sub>max</sub> [1/s] = " << sys->maxRateConstantChem << ", F = " << F << "<br />" << endl;
+    output_stream << "r<sub>max</sub> [1/s] = " << sys.maxRateConstantChem << ", F = " << F << "<br />" << endl;
     output_stream << "&sigma; = " << sigma << ", &theta;<sub>max</sub> = " << totalTheta << ", &Delta;&theta; = " << deltaTheta << ", " << endl;
     output_stream << "X<sub>max</sub> = " << maxX << ", &Delta;X = " << deltaX << ", T<sub>max</sub> = " << maxT << ", &Delta;T = " << deltaT << "<br />" << endl;
 
@@ -381,7 +381,7 @@ void Simulation::initParametersEtc()
     numGridPoints = 1;
     do { numGridPoints++; } while (deltaX < maxX * (paramGamma - 1.0) / ( pow(paramGamma, numGridPoints-1) - 1.0 ));
     numCurrentPoints = min(numCurrentPoints, numGridPoints); // truncate number of current points if it is larger than number of grid points
-    numOneRow = numGridPoints * sys->vecSpecies.size(); // == MyData.OneRow
+    numOneRow = numGridPoints * sys.vecSpecies.size(); // == MyData.OneRow
 
     // output parametrisation of grid:
     //output_stream << "Number of grid points = " << numGridPoints << "<br />" << endl;
@@ -406,7 +406,7 @@ void Simulation::initVectorsEtc()
         paramGamma2i[x] = paramGammai[x]*paramGammai[x];
         gridCoordinate[x] = (x == 0) ? 0.0 : gridCoordinate[x-1] + deltaX*paramGammai[x-1];
 
-        for (auto spec: sys->vecSpecies)
+        for (auto spec: sys.vecSpecies)
         {
             gridConcentration[spec->index*numGridPoints+x] = spec->normalizedAndEquilibratedConcentration;
             gridConcentrationPrevious[spec->index*numGridPoints+x] = 0.0;
@@ -441,13 +441,13 @@ void Simulation::initVectorsEtc()
 
     // initiliaze redox vectors & matrix:
     speciesInRedox.clear();
-    speciesInRedox.resize(sys->vecSpecies.size(), false);
+    speciesInRedox.resize(sys.vecSpecies.size(), false);
     matrixB0DiagonalTerms.clear();
-    matrixB0DiagonalTerms.resize(sys->vecSpecies.size(), 0.0);
-    currentContributionMatrix.resize(static_cast<Eigen::Index>(sys->vecSpecies.size()), static_cast<Eigen::Index>(sys->vecRedox.size()));
+    matrixB0DiagonalTerms.resize(sys.vecSpecies.size(), 0.0);
+    currentContributionMatrix.resize(static_cast<Eigen::Index>(sys.vecSpecies.size()), static_cast<Eigen::Index>(sys.vecRedox.size()));
     currentContributionMatrix.setZero();
-    currentContributionSpeciesFlux.resize(static_cast<Eigen::Index>(sys->vecSpecies.size()));
-    currentContributionRedoxFlux.resize(static_cast<Eigen::Index>(sys->vecRedox.size()));
+    currentContributionSpeciesFlux.resize(static_cast<Eigen::Index>(sys.vecSpecies.size()));
+    currentContributionRedoxFlux.resize(static_cast<Eigen::Index>(sys.vecRedox.size()));
 
     // initialize Triplet container
     tripletContainerMatrixA.clear();
@@ -464,7 +464,7 @@ void Simulation::initVectorsEtc()
 void Simulation::addKineticsToMatrix()
 {
     Species *s;
-    for (auto rxn: sys->vecReactions) {
+    for (auto rxn: sys.vecReactions) {
         // FORWARD REACTIONS
         if (rxn->specLHS1 != nullptr && rxn->specLHS2 != nullptr)
         { // second-order forward reaction
@@ -523,9 +523,9 @@ void Simulation::addRedoxToMatrix()
     size_t oxidx, redidx, specidx;
     double p, Kred, Kox;
 
-    for (auto redox: sys->vecRedox)
+    for (auto redox: sys.vecRedox)
     {
-        p = static_cast<double>(redox->numberElectrons) * f * (exper->initialPotential - redox->standardPotential); // normalized potential
+        p = static_cast<double>(redox->numberElectrons) * f * (exper.initialPotential - redox->standardPotential); // normalized potential
 
         Kred = redox->rateConstantHeteroNormalized * exp(-redox->alpha * p); // K_red B-V kinetics ("Kf")
         Kox = redox->rateConstantHeteroNormalized * exp((1.0 - redox->alpha) * p); // K_ox B-V kinetics ("Kb")
@@ -548,7 +548,7 @@ void Simulation::addRedoxToMatrix()
     }
 
     // add zero flux condition for all species NOT in redox step:
-    for (auto spec: sys->vecSpecies)
+    for (auto spec: sys.vecSpecies)
     {
         specidx = spec->index*numGridPoints;
 
@@ -571,7 +571,7 @@ void Simulation::addRedoxToMatrix()
 void Simulation::addBICoeffsToMatrix()
 {
     size_t row, relidx_max;
-    for (auto spec: sys->vecSpecies)
+    for (auto spec: sys.vecSpecies)
     {
         for (size_t x = 1; x < numGridPoints; x++) // since x == 0 corresponds to the boundary condition
         {
@@ -591,7 +591,7 @@ void Simulation::addBICoeffsToMatrix()
 double Simulation::coeffMatrixN2(size_t x, int relative_position, double normalizedDiffusionConstant)
 {
     size_t coeffidx = static_cast<size_t>(relative_position+1); // relative_position >= -1
-    double coeff = coeffAlpha[coeffidx] + el->electrodeGeometryFactor*deltaX*paramGammai[x]/(paramR0+gridCoordinate[x])*coeffBeta[coeffidx];
+    double coeff = coeffAlpha[coeffidx] + el.electrodeGeometryFactor*deltaX*paramGammai[x]/(paramR0+gridCoordinate[x])*coeffBeta[coeffidx];
     coeff *= normalizedDiffusionConstant; // Compton page 88/89
     if (relative_position == 0) { coeff -= paramGamma2i[x]/paramLambda; }
 

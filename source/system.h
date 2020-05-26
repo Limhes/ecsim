@@ -69,7 +69,6 @@ public:
     double maxConcentration, maxDiffusionConstant, maxRateConstantChem; // Maximum concentration [mol/m3], diffusion coefficient [m2/s], and homo/hetero max rate constants [1/s] and [??]
 public:
     System() : maxConcentration( 0.0 ), maxDiffusionConstant( 0.0 ), maxRateConstantChem( 0.0 ) {}
-    ~System();
 
     vector<double>::size_type addSpecies(Species*);
     vector<double>::size_type addRedox(Redox*);
