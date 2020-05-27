@@ -9,56 +9,51 @@ using namespace std;
  * ADD SPECIES, REDOX COUPLES, HOMOGENEOUS REACTIONS TO SYSTEM
  *=============================================================================================*/
 
-bool System::isSpeciesPresentWithName(string _name)
+Species* System::getSpeciesByName(string name_to_test)
 {
     for (auto spec: vecAllSpecies)
     {
-        if (spec->name == _name) return true;
-    }
-    return false;
-}
-
-Species* System::getSpeciesByName(string _name)
-{
-    for (auto spec: vecAllSpecies)
-    {
-        if (spec->name == _name) return spec;
+        if (spec->getName() == name_to_test) return spec;
     }
     return nullptr;
 }
 
+bool System::isSpeciesPresentWithName(string name_to_test)
+{
+    return (getSpeciesByName(name_to_test) != nullptr);
+}
+
 string System::generateUniqueSpeciesName()
 {
-    // species name will go from A to Z, then into some symbols, then a to z and at one point go wrong...
+    // species name will go from A to Z, then into some symbols, then a to z and at one point go wrong (TODO: fix that)
     char c = 'A';
     string s;
     do { s = c++; } while (isSpeciesPresentWithName(s));
     return s;
 }
 
-vector<double>::size_type System::addSpecies(Species *spec)
+vector<double>::size_type System::addSpecies(Species* spec)
 {
-    if (spec->name == "") spec->name = generateUniqueSpeciesName();
+    // make sure species has a unique, non-empty name:
+    if (spec->getName() == "" || isSpeciesPresentWithName(spec->getName()))
+        spec->setName(generateUniqueSpeciesName());
 
     // add species to system:
-    vecAllSpecies.emplace_back(spec);
-
+    vecAllSpecies.push_back(spec);
     return vecAllSpecies.size();
 }
 
 vector<double>::size_type System::addRedox(Redox *redox)
 {
     // add redox to system:
-    vecAllRedox.emplace_back(redox);
-
+    vecAllRedox.push_back(redox);
     return vecAllRedox.size();
 }
 
 vector<double>::size_type System::addReaction(Reaction *rxn)
 {
     // add reaction to system:
-    vecAllReactions.emplace_back(rxn);
-
+    vecAllReactions.push_back(rxn);
     return vecAllReactions.size();
 }
 
@@ -68,6 +63,7 @@ vector<double>::size_type System::addReaction(Reaction *rxn)
 
 void System::finalize(double epsilon)
 {
+    // these functions have to be called in this order:
     setActiveSystem();
     updateSpeciesProperties();
     calcMaxRateConstants(epsilon);
@@ -75,58 +71,61 @@ void System::finalize(double epsilon)
 }
 
 void System::setActiveSystem()
-{
-    // first, set all species to disabled:
-    for (auto spec: vecAllSpecies)
-    {
-        spec->inRedox = false;
-        spec->inReaction = false;
-    }
-
-    // add all redox:
+{   
+    // clear all vectors, so active redox/reaction/species can be added:
+    vecSpecies.clear();
     vecRedox.clear();
-    size_t redoxidx = 0;
+    vecReactions.clear();
+
+    // add all redox and contained species:
     for (auto redox: vecAllRedox)
     {
-        if (redox->enabled)
+        if (redox->isEnabled())
         {
-            // assign index, set species to enabled and add to vector that's used by the simulator:
-            redox->index = redoxidx++;
-            if (redox->specReduced != nullptr)  redox->specReduced->inRedox = true;
-            if (redox->specOxidized != nullptr) redox->specOxidized->inRedox = true;
-            vecRedox.emplace_back(redox);
+            // set species to enabled and add to vector that's used by the simulator:
+            setActiveSpecies(redox->getSpecRed());
+            setActiveSpecies(redox->getSpecOx());
+            vecRedox.push_back(redox);
         }
     }
 
-    // add all reaction:
-    vecReactions.clear();
-    size_t rxnidx = 0;
+    // add all reaction and contained species:
     for (auto rxn: vecAllReactions)
     {
-        if (rxn->enabled)
+        if (rxn->isEnabled())
         {
-            // assign index, set species to enabled and add to vector that's used by the simulator:
-            rxn->index = rxnidx++;
-            if (rxn->specLHS1 != nullptr) rxn->specLHS1->inReaction = true;
-            if (rxn->specLHS2 != nullptr) rxn->specLHS2->inReaction = true;
-            if (rxn->specRHS1 != nullptr) rxn->specRHS1->inReaction = true;
-            if (rxn->specRHS2 != nullptr) rxn->specRHS2->inReaction = true;
-            vecReactions.emplace_back(rxn);
+            // set species to enabled and add to vector that's used by the simulator:
+            setActiveSpecies(rxn->getSpecLHS1());
+            setActiveSpecies(rxn->getSpecLHS2());
+            setActiveSpecies(rxn->getSpecRHS1());
+            setActiveSpecies(rxn->getSpecRHS2());
+            vecReactions.push_back(rxn);
         }
     }
+    
+    size_t idx = 0;
+    for (auto redox: vecRedox) redox->setIndex(idx++);
+    idx = 0;
+    for (auto rxn: vecReactions) rxn->setIndex(idx++);
+    idx = 0;
+    for (auto spec: vecSpecies) spec->setIndex(idx++);
+}
 
-    // add all species:
-    vecSpecies.clear();
-    size_t specidx = 0;
-    for (auto spec: vecAllSpecies)
+void System::setActiveSpecies(Species* spec)
+{
+    // do nothing if "no species" or species has already been activated:
+    if (spec == nullptr || isActiveSpecies(spec)) return;
+    
+    vecSpecies.push_back(spec);
+}
+
+bool System::isActiveSpecies(Species* spec_to_test)
+{
+    for (auto spec: vecSpecies)
     {
-        if (spec->inRedox || spec->inReaction)
-        {
-            // assign index and add to vector that's used by the simulator:
-            spec->index = specidx++;
-            vecSpecies.emplace_back(spec);
-        }
+        if (spec == spec_to_test) return true;
     }
+    return false;
 }
 
 void System::updateSpeciesProperties()
@@ -136,14 +135,14 @@ void System::updateSpeciesProperties()
     maxConcentration = 0.0;
     for (auto spec: vecSpecies)
     {
-        maxDiffusionConstant = fmax(maxDiffusionConstant, spec->diffusionConstant);
-        maxConcentration = fmax(maxConcentration, spec->initialConcentration);
+        maxDiffusionConstant = fmax(maxDiffusionConstant, spec->getDiff());
+        maxConcentration = fmax(maxConcentration, spec->getConcInit());
     }
     // normalize concentration and diff coeff, and assign incremental index starting from 0:
     for (auto spec: vecSpecies)
     {
-        spec->normalizedDiffusionConstant = spec->diffusionConstant / maxDiffusionConstant;
-        spec->normalizedConcentration = spec->initialConcentration / maxConcentration;
+        spec->normalizeDiff(maxDiffusionConstant);
+        spec->normalizeConc(maxConcentration);
     }
 }
 
@@ -153,20 +152,20 @@ void System::calcMaxRateConstants(double epsilon)
     maxRateConstantChem = 0.0;
     for (auto rxn: vecReactions)
     {
-        rxn->rateConstantForwardNormalized = rxn->rateConstantForward * epsilon * epsilon / maxDiffusionConstant;
-        if (rxn->specLHS1 != nullptr && rxn->specLHS2 != nullptr) rxn->rateConstantForwardNormalized *= maxConcentration; // bimolecular rxn
-        maxRateConstantChem = fmax(maxRateConstantChem, rxn->rateConstantForwardNormalized);
+        rxn->normalizeKf(maxDiffusionConstant / (epsilon * epsilon));
+        if (rxn->getSpecLHS1() != nullptr && rxn->getSpecLHS2() != nullptr) rxn->normalizeKf(1.0/maxConcentration); // bimolecular rxn
+        maxRateConstantChem = fmax(maxRateConstantChem, rxn->getKfNorm());
 
-        rxn->rateConstantBackwardNormalized = rxn->rateConstantBackward * epsilon * epsilon / maxDiffusionConstant;
-        if (rxn->specRHS1 != nullptr && rxn->specRHS2 != nullptr) rxn->rateConstantBackwardNormalized *= maxConcentration; // bimolecular rxn
-        maxRateConstantChem = fmax(maxRateConstantChem, rxn->rateConstantBackwardNormalized); // dimensionless
+        rxn->normalizeKb(maxDiffusionConstant / (epsilon * epsilon));
+        if (rxn->getSpecRHS1() != nullptr && rxn->getSpecRHS2() != nullptr) rxn->normalizeKb(1.0/maxConcentration); // bimolecular rxn
+        maxRateConstantChem = fmax(maxRateConstantChem, rxn->getKbNorm()); // dimensionless
     }
     maxRateConstantChem /= epsilon * epsilon / maxDiffusionConstant; // denormalize for consistency
 
     // normalize Ke:
     for (auto red: vecRedox)
     {
-        red->rateConstantHeteroNormalized = red->rateConstantHetero * epsilon / maxDiffusionConstant; // Ke now dimensionless
+        red->normalizeKe(maxDiffusionConstant / epsilon); // Ke now dimensionless
     }
 }
 
@@ -180,19 +179,22 @@ int System::equilibrateConcentrations()
     int underflow, unstable, iter = 0;
     double delta_conc, f, b, minConc1 = 0, minConc2 = 0;
     double dt = 0.1; // since kf, kb, conc are dimensionless!
-
-    for (auto spec: vecSpecies)
+    
+    size_t idx, num_spec = vecSpecies.size();
+    vector<double> Del, conc, equilconc;
+    
+    for (idx = 0; idx < num_spec; idx++)
     {
-        spec->Del = 0.0;
-        spec->conc = spec->normalizedConcentration;
-        spec->normalizedAndEquilibratedConcentration = spec->normalizedConcentration;
+        Del.push_back(0.0);
+        conc.push_back(vecSpecies[idx]->getConcNorm());
+        equilconc.push_back(vecSpecies[idx]->getConcNorm());
     }
 
     do
     {
-        for (auto spec: vecSpecies)
+        for (auto d: Del)
         {
-            spec->Del = 0.0;
+            d = 0.0;
         }
 
         for (auto rxn: vecReactions)
@@ -202,16 +204,17 @@ int System::equilibrateConcentrations()
             f = 1.0;
             b = 1.0;
 
-            for (auto spec: vecSpecies)
+            for (idx = 0; idx < num_spec; idx++)
             {
-                if (rxn->specLHS1 == spec || rxn->specLHS2 == spec) f *= spec->conc;
-                else if (rxn->specRHS1 == spec || rxn->specRHS2 == spec) b *= spec->conc;
+                if (rxn->getSpecLHS1() == vecSpecies[idx] || rxn->getSpecLHS2() == vecSpecies[idx]) f *= conc[idx];
+                else if (rxn->getSpecRHS1() == vecSpecies[idx] || rxn->getSpecRHS2() == vecSpecies[idx]) b *= conc[idx];
             }
 
-            delta_conc = (f * rxn->rateConstantForwardNormalized - b * rxn->rateConstantBackwardNormalized) * dt;
-            for (auto spec: vecSpecies) {
-                if (rxn->specLHS1 == spec || rxn->specLHS2 == spec) spec->Del -= delta_conc;
-                if (rxn->specRHS1 == spec || rxn->specRHS2 == spec) spec->Del += delta_conc;
+            delta_conc = (f * rxn->getKfNorm() - b * rxn->getKbNorm()) * dt;
+            for (idx = 0; idx < num_spec; idx++)
+            {
+                if (rxn->getSpecLHS1() == vecSpecies[idx] || rxn->getSpecLHS2() == vecSpecies[idx]) Del[idx] -= delta_conc;
+                if (rxn->getSpecRHS1() == vecSpecies[idx] || rxn->getSpecRHS2() == vecSpecies[idx]) Del[idx] += delta_conc;
             }
         }
 
@@ -219,23 +222,25 @@ int System::equilibrateConcentrations()
         underflow = 0;
         unstable = 0;
 
-        for (auto spec: vecSpecies)
+        for (idx = 0; idx < num_spec; idx++)
         {
-            spec->normalizedAndEquilibratedConcentration = spec->conc;
-            spec->conc += spec->Del;
+            // concentrations equilibrated:
+            equilconc[idx] = conc[idx];
+            conc[idx] += Del[idx];
+            vecSpecies[idx]->setConcNormEquil(equilconc[idx]);
 
-            if (spec->conc < 0.0)
+            if (conc[idx] < 0.0)
             {
                 underflow++;
 
-                if (spec->conc < minConc2)
+                if (conc[idx] < minConc2)
                 {
-                    minConc2 = spec->conc;
-                    minConc1 = spec->normalizedAndEquilibratedConcentration;
+                    minConc2 = conc[idx];
+                    minConc1 = equilconc[idx];
                     continue;
                 }
             }
-            else if (spec->Del > MIN_CONC_CHANGE)
+            else if (Del[idx] > MIN_CONC_CHANGE)
             {
                 unstable++;
             }
@@ -244,9 +249,9 @@ int System::equilibrateConcentrations()
         if (underflow > 0)
         {
             dt *= V_SHRINK * minConc1 / (minConc1-minConc2);
-            for (auto spec: vecSpecies)
+            for (idx = 0; idx < num_spec; idx++)
             {
-                spec->conc = spec->normalizedAndEquilibratedConcentration; // restore original concentrations
+                conc[idx] = equilconc[idx]; // restore original concentrations
             }
         }
         else

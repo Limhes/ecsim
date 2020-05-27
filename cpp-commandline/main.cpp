@@ -1,5 +1,6 @@
 #include "simulation.h"
 #include <stdlib.h>
+#include <iostream>
 
 int main()
 {
@@ -30,24 +31,17 @@ int main()
     Species spec_red("red", 0.0, 1.0e-9);
     Species spec_prod("product", 0.0, 1.0e-9);
     
-    // add chemical species to the system:
-    g_sim.sys.addSpecies(&spec_ox);
-    g_sim.sys.addSpecies(&spec_red);
-    g_sim.sys.addSpecies(&spec_prod);
-    // a pointer to the species can now be obtained by name:
-    //Species* spec_red_new = g_sim.sys.getSpeciesByName("red");
-    
     // add redox steps (oxidized species, reduced species,
     //                  number of electrons, standard potential [V],
-    //                  ke [m/s], alpha [-], unused bool)):
-    Redox redox(&spec_ox, &spec_red, 1, -0.5, 1.0, 0.5, false);
-    redox.enabled = true;
+    //                  ke [m/s], alpha [-])):
+    Redox redox(&spec_ox, &spec_red, 1, -0.5, 1.0, 0.5);
+    redox.enable(); // starts disabled, so have to manually enable it
     g_sim.sys.addRedox(&redox);
     
-    // add homogeneous reactions of the form A+B <. C+D (A, B, C, D, k_f, k_b)
-    Reaction rxn(&spec_red, nullptr, &spec_prod, nullptr, // pass nullptr for "no species"
-                                 10.0, 0.0); // forward, backward rate constant
-    rxn.enabled = true;
+    // add homogeneous reactions of the form A+B <-> C+D
+    // parameters: (A, B, C, D, k_f, k_b), pass nullptr for "no species"
+    Reaction rxn(&spec_red, nullptr, &spec_prod, nullptr, 10.0, 0.0); // forward, backward rate constant
+    rxn.enable(); // starts disabled, so have to manually enable it
     g_sim.sys.addReaction(&rxn);
 
     // set up electrode (type and geometry):
@@ -67,5 +61,8 @@ int main()
     }
     std::cout << ".....   ....." << std::endl;
 
+    std::cout << "Cathodic peak: " << (g_sim.ipc*1.0e6) << " uA at " << g_sim.Epc << " V" << std::endl;
+    
+    //*/
     return 0;
 }
