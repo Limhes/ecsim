@@ -42,9 +42,11 @@ PYBIND11_MODULE(pyecsim, m) {
     :rtype: pyecsim.Species
 )mydelimiter")
         .def(py::init<std::string, double, double>())
-        .def_readonly("normConc", &Species::normalizedConcentration, "Returns the concentration normalized to all species' concentrations")
-        .def_readonly("normEquilConc", &Species::normalizedAndEquilibratedConcentration, "Returns the normalized concentration after equilibration")
-        .def_readonly("normDiffCoeff", &Species::normalizedDiffusionConstant, "Returns the diffusion coefficient normalized to all species' coefficients");
+        .def("getConcInit", &Species::getConcInit, "Returns the species' initial concentration")
+        .def("getConcEquil", &Species::getConcEquil, "Returns the species' concentration after thermal equilibration (only valid after simulation)")
+        .def("getDiff", &Species::getDiff, "Returns the species' diffusion coefficient")
+        .def("setConcInit", &Species::setConcInit, "Set the species' initial concentration")
+        .def("setDiff", &Species::setDiff, "Set the species' diffusion coefficient");
     
     /** 
     * Reaction
@@ -69,10 +71,13 @@ PYBIND11_MODULE(pyecsim, m) {
     :rtype: pyecsim.Reaction
 )mydelimiter")
         .def(py::init<Species*, Species*, Species*, Species*, double, double>())
-        .def_readwrite("rateConstantForward", &Reaction::rateConstantForward, "The forward rate constant [1/s or L/mol/s]")
-        .def_readwrite("rateConstantBackward", &Reaction::rateConstantBackward, "The backward rate constant [1/s or L/mol/s]")
-        .def("enable", [](Reaction &rxn) { rxn.enabled = true; return rxn; }, "Enables the reaction and returns the modified Reaction object")
-        .def("disable", [](Reaction &rxn) { rxn.enabled = false; return rxn; }, "Disables the reaction and returns the modified Reaction object");
+        .def("getKf", &Reaction::getKf, "Get the forward rate constant [1/s or L/mol/s]")
+        .def("getKb", &Reaction::getKb, "Get the backward rate constant [1/s or L/mol/s]")
+        .def("setKf", &Reaction::setKf, "Set the forward rate constant [1/s or L/mol/s]")
+        .def("setKb", &Reaction::setKb, "Set the backward rate constant [1/s or L/mol/s]")
+        .def("enable", [](Reaction &rxn) { rxn.enable(); return rxn; }, "Enables the reaction and returns the modified Reaction object")
+        .def("disable", [](Reaction &rxn) { rxn.disable(); return rxn; }, "Disables the reaction and returns the modified Reaction object")
+        .def("isEnabled", &Reaction::isEnabled, "Returns true if the reaction is enabled, false otherwise");
     
     /** 
     * Redox
@@ -96,13 +101,18 @@ PYBIND11_MODULE(pyecsim, m) {
     :return: newly generated electron transfer step
     :rtype: pyecsim.Redox
 )mydelimiter")
-        .def(py::init([](Species* ox, Species* red, int n_e, double E, double k_e, double alpha) { return new Redox(ox, red, n_e, E, k_e, alpha, false); }))
-        .def_readwrite("n", &Redox::numberElectrons, "Number of electrons [-]")
-        .def_readwrite("E", &Redox::standardPotential, "Standard potential [V]")
-        .def_readwrite("k_e", &Redox::rateConstantHetero, "Heterogeneous rate constant [m/s]")
-        .def_readwrite("alpha", &Redox::alpha, "Symmetry parameter [-] (0.0 <= alpha <= 1.0)")
-        .def("enable", [](Redox &rdx) { rdx.enabled = true; return rdx; }, "Enables the electron transfer step and returns the modified Redox object")
-        .def("disable", [](Redox &rdx) { rdx.enabled = false; return rdx; }, "Disables the electron transfer step and returns the modified Redox object");
+        .def(py::init<Species*, Species*, int, double, double, double>())
+        .def("getNe", &Redox::getNe, "Get number of electrons [-]")
+        .def("setNe", &Redox::setNe, "Set number of electrons [-]")
+        .def("getE0", &Redox::getE0, "Get standard potential [V]")
+        .def("setE0", &Redox::setE0, "Set standard potential [V]")
+        .def("getKe", &Redox::getKe, "Get heterogeneous rate constant [m/s]")
+        .def("setKe", &Redox::setKe, "Set heterogeneous rate constant [m/s]")
+        .def("getAlpha", &Redox::getAlpha, "Get symmetry parameter [-] (0.0 <= alpha <= 1.0)")
+        .def("setAlpha", &Redox::setAlpha, "Set symmetry parameter [-] (0.0 <= alpha <= 1.0)")
+        .def("enable", [](Redox &rdx) { rdx.enable(); return rdx; }, "Enables the electron transfer step and returns the modified Redox object")
+        .def("disable", [](Redox &rdx) { rdx.disable(); return rdx; }, "Disables the electron transfer step and returns the modified Redox object")
+        .def("isEnabled", &Redox::isEnabled, "Returns true if the electron transfer step is enabled, false otherwise");
 
     /** 
     * System
@@ -117,26 +127,6 @@ PYBIND11_MODULE(pyecsim, m) {
     :rtype: pyecsim.System
 )mydelimiter")
         .def(py::init<>())
-        .def("addSpecies", [](System &sys, Species* spec)
-            { sys.addSpecies(spec); return sys; }, R"mydelimiter(
-    addSpecies(spec:pyecsim.Species) -> pyecsim.System
-    Add single species to the system
-    
-    :param spec: species to be added to the system
-    :type spec: pyecsim.Species
-    :return: the modified system
-    :rtype: pyecsim.System
-)mydelimiter")
-        .def("addSpecies", [](System &sys, std::vector<Species*> spec_list)
-            { for (auto spec : spec_list) { sys.addSpecies(spec); } return sys; }, R"mydelimiter(
-    addSpecies(spec_list:List[pyecsim.Species]) -> pyecsim.System
-    Add multiple species to the system
-
-    :param spec_list: list of species to be added to the system
-    :type spec_list: List[pyecsim.Species]
-    :return: the modified system
-    :rtype: pyecsim.System
-)mydelimiter")
         .def("addRedox", [](System &sys, Redox* red)
             { sys.addRedox(red); return sys; }, R"mydelimiter(
     addRedox(red:pyecsim.Redox) -> pyecsim.System
@@ -176,31 +166,6 @@ PYBIND11_MODULE(pyecsim, m) {
     :type rxn_list: List[pyecsim.Reaction]
     :return: the modified system
     :rtype: pyecsim.System
-)mydelimiter")
-        .def("getSpeciesByName", &System::getSpeciesByName, R"mydelimiter(
-    getSpeciesByName(name:str) -> pyecsim.Species
-    Get species reference by name
-
-    :param name: name of the species
-    :type name: String
-    :return: reference to the species
-    :rtype: pyecsim.Species
-)mydelimiter")
-        .def("generateUniqueSpeciesName", &System::generateUniqueSpeciesName, R"mydelimiter(
-    generateUniqueSpeciesName() -> str
-    Generate unique species name
-
-    :return: a species name that is guaranteed to be not present in current system
-    :rtype: str
-)mydelimiter")
-        .def("isSpeciesPresentWithName", &System::isSpeciesPresentWithName, R"mydelimiter(
-    isSpeciesPresentWithName(name:str) -> bool
-    Check whether species with this name exists
-
-    :param name: name of the species
-    :type name: String
-    :return: True if species with name is present in system
-    :rtype: bool
 )mydelimiter");
 
     /** 

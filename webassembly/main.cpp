@@ -11,6 +11,9 @@ double* g_potential;
 
 // simulation object:
 Simulation* g_sim;
+std::vector<Species*> g_spec;
+std::vector<Redox*> g_red;
+std::vector<Reaction*> g_rxn;
 std::vector<double> g_vertex_potentials;
 
 EMSCRIPTEN_KEEPALIVE
@@ -22,6 +25,10 @@ EMSCRIPTEN_KEEPALIVE
 void clearSim()
 {
     delete g_sim;
+    g_spec.clear();
+    g_red.clear();
+    g_rxn.clear();
+    
     g_sim = new Simulation(std::cout);
 
     std::cout << "Simulation object created." << std::endl;
@@ -31,18 +38,19 @@ EMSCRIPTEN_KEEPALIVE
 int addSpecies(char* _name, double _conc, double _diff)
 {
     std::cout << _name << " " << _conc << " " << _diff << std::endl;
-    g_sim->sys->addSpecies( new Species(std::string(_name), _conc, _diff) );
+    Species _spec(std::string(_name), _conc, _diff);
+    g_spec.push_back(&_spec);
+    g_sim->sys.addSpecies(&_spec);
     return 0;
 }
 
 EMSCRIPTEN_KEEPALIVE
 int addRedox(char* _ox, char* _red, int _n, double _pot, double _ke, double _alpha, bool _rev, bool _enabled)
 {
-    Redox* redox = new Redox(g_sim->sys->getSpeciesByName(std::string(_ox)),
-                             g_sim->sys->getSpeciesByName(std::string(_red)),
-                             _n, _pot, _ke, _alpha, _rev);
-    redox->enabled = _enabled;
-    g_sim->sys->addRedox(redox);
+    Redox red(g_sim->sys.getSpeciesByName(std::string(_ox)), g_sim->sys.getSpeciesByName(std::string(_red)), _n, _pot, _ke, _alpha, _rev);
+    red.enabled = _enabled;
+    g_red.push_back(&red);
+    g_sim->sys.addRedox(&red);
     return 0;
 }
 
@@ -51,13 +59,11 @@ int addReaction(char* _A, char* _B, char* _C, char* _D, double _kf, double _kb, 
 {
     // this is safe, since getSpeciesByName() returns nullptr when string not found,
     // and nullptr leads to "no species" in Reaction constructor:
-    Reaction* rxn = new Reaction(g_sim->sys->getSpeciesByName(std::string(_A)),
-                                 g_sim->sys->getSpeciesByName(std::string(_B)),
-                                 g_sim->sys->getSpeciesByName(std::string(_C)),
-                                 g_sim->sys->getSpeciesByName(std::string(_D)),
-                                 _kf, _kb);
-    rxn->enabled = _enabled;
-    g_sim->sys->addReaction(rxn);
+    Reaction rxn(g_sim->sys.getSpeciesByName(std::string(_A)), g_sim->sys.getSpeciesByName(std::string(_B)),
+                 g_sim->sys.getSpeciesByName(std::string(_C)), g_sim->sys.getSpeciesByName(std::string(_D)), _kf, _kb);
+    rxn.enabled = _enabled;
+    g_rxn.push_back(&rxn);
+    g_sim->sys.addReaction(&rxn);
     return 0;
 }
 
@@ -65,9 +71,9 @@ EMSCRIPTEN_KEEPALIVE
 int setElectrode(int _type, double _geom1, double _geom2)
 {
     // set up electrode (type and geometry):
-    g_sim->el->setType(_type);
-    g_sim->el->setGeom1(_geom1);
-    g_sim->el->setGeom2(_geom2);
+    g_sim->el.setType(_type);
+    g_sim->el.setGeom1(_geom1);
+    g_sim->el.setGeom2(_geom2);
     return 0;
 }
 
@@ -75,7 +81,7 @@ EMSCRIPTEN_KEEPALIVE
 int setEnvironment(double _temp)
 {
     // set up environment:
-    g_sim->env->setTemperature(_temp);
+    g_sim->env.setTemperature(_temp);
 
     return 0;
 }
@@ -85,17 +91,17 @@ int setCVExperiment(double _tcond, double _econd, double _tequil, double _einit,
 {
     g_vertex_potentials.clear();
     
-    g_sim->exper->setConditioningTime(_tcond);
-    g_sim->exper->setConditioningPotential(_econd);
-    g_sim->exper->setEquilibration(_tequil);
+    g_sim->exper.setConditioningTime(_tcond);
+    g_sim->exper.setConditioningPotential(_econd);
+    g_sim->exper.setEquilibration(_tequil);
 
-    g_sim->exper->setInitialPotential(_einit);
-    g_sim->exper->setFinalPotential(_efinal);
+    g_sim->exper.setInitialPotential(_einit);
+    g_sim->exper.setFinalPotential(_efinal);
 
-    g_sim->exper->setVertexDelay(_tvertex);
+    g_sim->exper.setVertexDelay(_tvertex);
 
-    g_sim->exper->setScanRate(_sr);
-    g_sim->exper->setNumCycles(_nc);
+    g_sim->exper.setScanRate(_sr);
+    g_sim->exper.setNumCycles(_nc);
     
     return 0;
 }
@@ -110,7 +116,7 @@ int addCVVertex(double _vp)
 EMSCRIPTEN_KEEPALIVE
 int setCVVertices()
 {
-    g_sim->exper->setVertexPotentials(g_vertex_potentials);
+    g_sim->exper.setVertexPotentials(g_vertex_potentials);
     return 0;
 }
 

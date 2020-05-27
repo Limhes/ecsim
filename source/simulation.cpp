@@ -54,23 +54,23 @@ size_t Simulation::runSimulation(vector<double> &_current, vector<double> &_pote
     Epa = 0.0;
 
     // conditioning step:
-    delaySegment(exper->conditioningPotential, exper->conditioningTime);
+    delaySegment(exper.conditioningPotential, exper.conditioningTime);
     // equilibration step:
-    delaySegment(exper->initialPotential, exper->equilibrationTime);
+    delaySegment(exper.initialPotential, exper.equilibrationTime);
     // scan cycles:
-    for (int cycle = 0; cycle < exper->numCycles; cycle++) {
-        recordCurrent = (cycle == exper->numCycles - 1); // warning: hard-coded option to record current only of last cycle
+    for (int cycle = 0; cycle < exper.numCycles; cycle++) {
+        recordCurrent = (cycle == exper.numCycles - 1); // warning: hard-coded option to record current only of last cycle
 
-        segmentStartPotential = exper->initialPotential;
-        for (auto vp: exper->vertexPotentials) {
+        segmentStartPotential = exper.initialPotential;
+        for (auto vp: exper.vertexPotentials) {
             // scan up to vertex:
             scanSegment(segmentStartPotential, vp, recordCurrent, _current, _potential);
             segmentStartPotential = vp;
             // vertex delay:
-            delaySegment(vp, exper->vertexDelay);
+            delaySegment(vp, exper.vertexDelay);
         }
         // scan from last vertex to final potential:
-        scanSegment(segmentStartPotential, exper->finalPotential, recordCurrent, _current, _potential);
+        scanSegment(segmentStartPotential, exper.finalPotential, recordCurrent, _current, _potential);
     }
 
     return _current.size();
@@ -143,11 +143,11 @@ void Simulation::solveSystem(double theta)
 
 void Simulation::storeConcentrations()
 {
-    for (auto spec: sys->vecSpecies)
+    for (auto spec: sys.vecSpecies)
     {
         for (size_t x = 0; x < numGridPoints; x++)
         {
-            gridConcentrationPrevious[spec->index*numGridPoints+x] = gridConcentration[spec->index*numGridPoints+x];
+            gridConcentrationPrevious[spec->getIndex()*numGridPoints+x] = gridConcentration[spec->getIndex()*numGridPoints+x];
         }
     }
 }
@@ -190,11 +190,11 @@ void Simulation::updateIndependentTerms()
 {
     size_t EndNormal = numGridPoints - numDerivPoints + 2;
 
-    //for(int s = 0; s < sys->num_species; s++)
-    for (auto spec: sys->vecSpecies)
+    //for(int s = 0; s < sys.num_species; s++)
+    for (auto spec: sys.vecSpecies)
     {
         //Zero at matrix rows storing surface conditions
-        independentTerms[spec->index*numGridPoints] = 0;
+        independentTerms[spec->getIndex()*numGridPoints] = 0;
 
         for (size_t x = 1; x < numGridPoints; x++)
         {
@@ -202,13 +202,13 @@ void Simulation::updateIndependentTerms()
              * the system of equations is ('a' are coefficients, 'x(i,s)' the next concentrations at grid point i for species s):
              * a(-1)*x(i-1,s) + a(0)*x(i,s) + a(+1)*x(i+1,s) + a(+2)*x(i+2,s) + (etc.) = b(i,s)
              */
-            independentTerms[x+spec->index*numGridPoints] = -gridConcentration[x+numGridPoints*spec->index]*paramGamma2i[x]/paramLambda;
+            independentTerms[x+spec->getIndex()*numGridPoints] = -gridConcentration[x+numGridPoints*spec->getIndex()]*paramGamma2i[x]/paramLambda;
             // however, when i>numGridPoints, then x(i+i) reduces to the (never changing) bulk concentration and we add them into 'b', because they are now known:
             if (x >= EndNormal)
             {
                 for (int jj = 0; jj <= static_cast<int>(x - EndNormal); jj++)
                 {
-                    independentTerms[x+spec->index*numGridPoints] -= coeffMatrixN2(x, static_cast<int>(numDerivPoints)-jj-2, spec->normalizedDiffusionConstant) * spec->normalizedAndEquilibratedConcentration;
+                    independentTerms[x+spec->getIndex()*numGridPoints] -= coeffMatrixN2(x, static_cast<int>(numDerivPoints)-jj-2, spec->getDiffNorm()) * spec->getConcNormEquil();
                 }
             }
         }
@@ -223,32 +223,32 @@ void Simulation::updateRedoxInMatrix(double theta)
     // reset diagonal terms:
     fill(matrixB0DiagonalTerms.begin(), matrixB0DiagonalTerms.end(), 0.0);
 
-    for (auto redox: sys->vecRedox)
+    for (auto redox: sys.vecRedox)
     {
-        p = static_cast<double>(redox->numberElectrons) * (theta - f * redox->standardPotential); // normalized potential
+        p = static_cast<double>(redox->getNe()) * (theta - f * redox->getE0()); // normalized potential
 
-        Kred = redox->rateConstantHeteroNormalized * exp(-redox->alpha * p); // B-V kinetics
-        Kox = redox->rateConstantHeteroNormalized * exp((1.0 - redox->alpha) * p); // B-V kinetics
+        Kred = redox->getKeNorm() * exp(-redox->getAlpha() * p); // B-V kinetics
+        Kox = redox->getKeNorm() * exp((1.0 - redox->getAlpha()) * p); // B-V kinetics
 
-        oxidx = static_cast<Eigen::Index>(redox->specOxidized->index*numGridPoints);
-        redidx = static_cast<Eigen::Index>(redox->specReduced->index*numGridPoints);
+        oxidx = static_cast<Eigen::Index>(redox->getSpecOx()->getIndex()*numGridPoints);
+        redidx = static_cast<Eigen::Index>(redox->getSpecRed()->getIndex()*numGridPoints);
 
         // add terms per redox reaction:
-        matrixA.coeffRef( oxidx,  redidx ) = - deltaX * Kox / redox->specOxidized->normalizedDiffusionConstant;  // B0
-        matrixA.coeffRef( redidx, oxidx )  = - deltaX * Kred / redox->specReduced->normalizedDiffusionConstant; // B0
+        matrixA.coeffRef( oxidx,  redidx ) = - deltaX * Kox / redox->getSpecOx()->getDiffNorm();  // B0
+        matrixA.coeffRef( redidx, oxidx )  = - deltaX * Kred / redox->getSpecRed()->getDiffNorm(); // B0
 
         // add to diagonal terms:
-        matrixB0DiagonalTerms[redox->specOxidized->index] += deltaX * Kred / redox->specOxidized->normalizedDiffusionConstant;
-        matrixB0DiagonalTerms[redox->specReduced->index] += deltaX * Kox / redox->specReduced->normalizedDiffusionConstant;
+        matrixB0DiagonalTerms[redox->getSpecOx()->getIndex()] += deltaX * Kred / redox->getSpecOx()->getDiffNorm();
+        matrixB0DiagonalTerms[redox->getSpecRed()->getIndex()] += deltaX * Kox / redox->getSpecRed()->getDiffNorm();
     }
 
     // add diagonal terms:
-    for (auto spec: sys->vecSpecies)
+    for (auto spec: sys.vecSpecies)
     {
-        if (speciesInRedox[spec->index]) // active redox species
+        if (speciesInRedox[spec->getIndex()]) // active redox species
         {
-            specidx = static_cast<int>(spec->index*numGridPoints);
-            matrixA.coeffRef( specidx, specidx )   = 1.0 + matrixB0DiagonalTerms[spec->index]; // B0
+            specidx = static_cast<int>(spec->getIndex()*numGridPoints);
+            matrixA.coeffRef( specidx, specidx )   = 1.0 + matrixB0DiagonalTerms[spec->getIndex()]; // B0
             matrixA.coeffRef( specidx, specidx+1 ) = -1.0; // B1
         }
     }
@@ -266,17 +266,17 @@ void Simulation::invertMatrix()
 double Simulation::calcCurrentFromFlux()
 {
     double totalflux, speciesflux, currentFromFlux;
-    currentFromFlux = el->epsilon * CONST_F * sys->maxDiffusionConstant * sys->maxConcentration;
+    currentFromFlux = el.epsilon * CONST_F * sys.getDiffMax() * sys.getConcMax();
 
     // determine flux per species:
-    for (auto spec: sys->vecSpecies)
+    for (auto spec: sys.vecSpecies)
     {
         speciesflux = 0;
         for(size_t kk = 0; kk < numCurrentPoints; kk++)
         {
-            speciesflux += coeffBeta0[kk] * gridConcentration[spec->index*numGridPoints+kk];
+            speciesflux += coeffBeta0[kk] * gridConcentration[spec->getIndex()*numGridPoints+kk];
         }
-        currentContributionSpeciesFlux[static_cast<Eigen::Index>(spec->index)] = speciesflux * spec->normalizedDiffusionConstant;
+        currentContributionSpeciesFlux[static_cast<Eigen::Index>(spec->getIndex())] = speciesflux * spec->getDiffNorm();
     }
 
     /* SOLVE FOR THE FLUX PER REDOX REACTION BY LEAST SQUARES
@@ -304,11 +304,11 @@ double Simulation::calcCurrentFromFlux()
 
     // sum to get total flux:
     totalflux = 0.0;
-    for (auto redox: sys->vecRedox)
+    for (auto redox: sys.vecRedox)
     {
         // this doesn't work well for n > 1 --> why not?
-        totalflux -= currentContributionRedoxFlux[static_cast<Eigen::Index>(redox->index)]
-                     * static_cast<double>(redox->numberElectrons);
+        totalflux -= currentContributionRedoxFlux[static_cast<Eigen::Index>(redox->getIndex())]
+                     * static_cast<double>(redox->getNe());
     }
     totalflux /= deltaX; // totalflux := dC/dX
 
@@ -340,23 +340,23 @@ void Simulation::prepareSimulation()
 void Simulation::initParametersEtc()
 {
     // some parameters
-    sys->finalize(el->epsilon);
-    f = CONST_F / (CONST_R * env->temperature);
-    totalTime = exper->totalTime();
-    totalTheta = f * totalTime * exper->scanRate;
-    paramR0 = el->epsilon / sqrt(sys->maxDiffusionConstant*totalTime);
+    sys.finalize(el.epsilon);
+    f = CONST_F / (CONST_R * env.temperature);
+    totalTime = exper.totalTime();
+    totalTheta = f * totalTime * exper.scanRate;
+    paramR0 = el.epsilon / sqrt(sys.getDiffMax()*totalTime);
 
     /* system dimensioning according to Compton (Understanding Voltammetry)
      * deltaTheta is a fixed value, taken from Compton
      * to increase accuracy, we need to decrease deltaX, which doesn't need a lot of extra time to solve!!!
      * the factor F in deltaX = pow(10.0, -F-0.5*log10(sigma)); should e.g. go from 2.2 to 4.2
      */
-    double F,logRate = log10(sys->maxRateConstantChem);
+    double F,logRate = log10(sys.getRateMax());
     if (logRate < minLogRate) { F = minF; }
     else if (logRate <= maxLogRate) { F = minF + (logRate - minLogRate) * (maxF - minF) / (maxLogRate - minLogRate); }
     else { F = maxF; }
 
-    sigma = el->epsilon * el->epsilon / sys->maxDiffusionConstant * f * exper->scanRate; // dimensionless scan rate
+    sigma = el.epsilon * el.epsilon / sys.getDiffMax() * f * exper.scanRate; // dimensionless scan rate
     maxT = totalTheta / sigma;
     deltaT = deltaTheta / sigma;
     maxX = 6.0*sqrt(maxT);
@@ -365,15 +365,15 @@ void Simulation::initParametersEtc()
     paramLambda = deltaT / (deltaX * deltaX);
 
     // print scaling parameters:
-    //output_stream << "Diff coeff [m2/s]: max = " << sys->maxDiffusionConstant << endl;
-    //output_stream << "Conc [mol/m3]: max = " << sys->maxConcentration << endl;
-    //output_stream << "Electrode [m]: epsilon = " << el->epsilon << ", area = " << el->electrodeArea << endl;
+    //output_stream << "Diff coeff [m2/s]: max = " << sys.getDiffMax() << endl;
+    //output_stream << "Conc [mol/m3]: max = " << sys.getConcMax() << endl;
+    //output_stream << "Electrode [m]: epsilon = " << el.epsilon << ", area = " << el.electrodeArea << endl;
     output_stream << "Initial concentrations after equilibration: (";
-    for (auto spec: sys->vecSpecies)
-        output_stream << "[" << spec->name << "] = " << spec->normalizedAndEquilibratedConcentration << ((spec!=sys->vecSpecies.back())?", ":"");
+    for (auto spec: sys.vecSpecies)
+        output_stream << "[" << spec->getName() << "] = " << spec->getConcNormEquil() << ((spec!=sys.vecSpecies.back())?", ":"");
     output_stream << ")<br />" << endl;
     output_stream << "V<sub>step</sub> [V] = " << deltaTheta/f << ", t<sub>max</sub> [s] = " << totalTime << ", " << endl;
-    output_stream << "r<sub>max</sub> [1/s] = " << sys->maxRateConstantChem << ", F = " << F << "<br />" << endl;
+    output_stream << "r<sub>max</sub> [1/s] = " << sys.getRateMax() << ", F = " << F << "<br />" << endl;
     output_stream << "&sigma; = " << sigma << ", &theta;<sub>max</sub> = " << totalTheta << ", &Delta;&theta; = " << deltaTheta << ", " << endl;
     output_stream << "X<sub>max</sub> = " << maxX << ", &Delta;X = " << deltaX << ", T<sub>max</sub> = " << maxT << ", &Delta;T = " << deltaT << "<br />" << endl;
 
@@ -381,7 +381,7 @@ void Simulation::initParametersEtc()
     numGridPoints = 1;
     do { numGridPoints++; } while (deltaX < maxX * (paramGamma - 1.0) / ( pow(paramGamma, numGridPoints-1) - 1.0 ));
     numCurrentPoints = min(numCurrentPoints, numGridPoints); // truncate number of current points if it is larger than number of grid points
-    numOneRow = numGridPoints * sys->vecSpecies.size(); // == MyData.OneRow
+    numOneRow = numGridPoints * sys.vecSpecies.size(); // == MyData.OneRow
 
     // output parametrisation of grid:
     //output_stream << "Number of grid points = " << numGridPoints << "<br />" << endl;
@@ -406,10 +406,10 @@ void Simulation::initVectorsEtc()
         paramGamma2i[x] = paramGammai[x]*paramGammai[x];
         gridCoordinate[x] = (x == 0) ? 0.0 : gridCoordinate[x-1] + deltaX*paramGammai[x-1];
 
-        for (auto spec: sys->vecSpecies)
+        for (auto spec: sys.vecSpecies)
         {
-            gridConcentration[spec->index*numGridPoints+x] = spec->normalizedAndEquilibratedConcentration;
-            gridConcentrationPrevious[spec->index*numGridPoints+x] = 0.0;
+            gridConcentration[spec->getIndex()*numGridPoints+x] = spec->getConcNormEquil();
+            gridConcentrationPrevious[spec->getIndex()*numGridPoints+x] = 0.0;
         }
     }
 
@@ -441,13 +441,13 @@ void Simulation::initVectorsEtc()
 
     // initiliaze redox vectors & matrix:
     speciesInRedox.clear();
-    speciesInRedox.resize(sys->vecSpecies.size(), false);
+    speciesInRedox.resize(sys.vecSpecies.size(), false);
     matrixB0DiagonalTerms.clear();
-    matrixB0DiagonalTerms.resize(sys->vecSpecies.size(), 0.0);
-    currentContributionMatrix.resize(static_cast<Eigen::Index>(sys->vecSpecies.size()), static_cast<Eigen::Index>(sys->vecRedox.size()));
+    matrixB0DiagonalTerms.resize(sys.vecSpecies.size(), 0.0);
+    currentContributionMatrix.resize(static_cast<Eigen::Index>(sys.vecSpecies.size()), static_cast<Eigen::Index>(sys.vecRedox.size()));
     currentContributionMatrix.setZero();
-    currentContributionSpeciesFlux.resize(static_cast<Eigen::Index>(sys->vecSpecies.size()));
-    currentContributionRedoxFlux.resize(static_cast<Eigen::Index>(sys->vecRedox.size()));
+    currentContributionSpeciesFlux.resize(static_cast<Eigen::Index>(sys.vecSpecies.size()));
+    currentContributionRedoxFlux.resize(static_cast<Eigen::Index>(sys.vecRedox.size()));
 
     // initialize Triplet container
     tripletContainerMatrixA.clear();
@@ -464,36 +464,36 @@ void Simulation::initVectorsEtc()
 void Simulation::addKineticsToMatrix()
 {
     Species *s;
-    for (auto rxn: sys->vecReactions) {
+    for (auto rxn: sys.vecReactions) {
         // FORWARD REACTIONS
-        if (rxn->specLHS1 != nullptr && rxn->specLHS2 != nullptr)
+        if (rxn->getSpecLHS1() != nullptr && rxn->getSpecLHS2() != nullptr)
         { // second-order forward reaction
-            addSecondOrderKineticTerm(rxn->specLHS1->index, rxn->specLHS2->index, rxn->specLHS1->index, -(rxn->rateConstantForwardNormalized));
-            addSecondOrderKineticTerm(rxn->specLHS1->index, rxn->specLHS2->index, rxn->specLHS2->index, -(rxn->rateConstantForwardNormalized));
-            if (rxn->specRHS1 != nullptr) addSecondOrderKineticTerm(rxn->specLHS1->index, rxn->specLHS2->index, rxn->specRHS1->index, rxn->rateConstantForwardNormalized);
-            if (rxn->specRHS2 != nullptr) addSecondOrderKineticTerm(rxn->specLHS1->index, rxn->specLHS2->index, rxn->specRHS2->index, rxn->rateConstantForwardNormalized);
+            addSecondOrderKineticTerm(rxn->getSpecLHS1()->getIndex(), rxn->getSpecLHS2()->getIndex(), rxn->getSpecLHS1()->getIndex(), -(rxn->getKfNorm()));
+            addSecondOrderKineticTerm(rxn->getSpecLHS1()->getIndex(), rxn->getSpecLHS2()->getIndex(), rxn->getSpecLHS2()->getIndex(), -(rxn->getKfNorm()));
+            if (rxn->getSpecRHS1() != nullptr) addSecondOrderKineticTerm(rxn->getSpecLHS1()->getIndex(), rxn->getSpecLHS2()->getIndex(), rxn->getSpecRHS1()->getIndex(), rxn->getKfNorm());
+            if (rxn->getSpecRHS2() != nullptr) addSecondOrderKineticTerm(rxn->getSpecLHS1()->getIndex(), rxn->getSpecLHS2()->getIndex(), rxn->getSpecRHS2()->getIndex(), rxn->getKfNorm());
         }
         else
         { // first-order forward reaction
-            if (rxn->specLHS1 != nullptr) s = rxn->specLHS1; else s = rxn->specLHS2;
-            addFirstOrderKineticTerm(s->index, s->index, -(rxn->rateConstantForwardNormalized));
-            if (rxn->specRHS1 != nullptr) addFirstOrderKineticTerm(s->index, rxn->specRHS1->index, rxn->rateConstantForwardNormalized); //
-            if (rxn->specRHS2 != nullptr) addFirstOrderKineticTerm(s->index, rxn->specRHS2->index, rxn->rateConstantForwardNormalized); //
+            if (rxn->getSpecLHS1() != nullptr) s = rxn->getSpecLHS1(); else s = rxn->getSpecLHS2();
+            addFirstOrderKineticTerm(s->getIndex(), s->getIndex(), -(rxn->getKfNorm()));
+            if (rxn->getSpecRHS1() != nullptr) addFirstOrderKineticTerm(s->getIndex(), rxn->getSpecRHS1()->getIndex(), rxn->getKfNorm()); //
+            if (rxn->getSpecRHS2() != nullptr) addFirstOrderKineticTerm(s->getIndex(), rxn->getSpecRHS2()->getIndex(), rxn->getKfNorm()); //
         }
         // BACKWARD REACTIONS
-        if (rxn->specRHS1 != nullptr && rxn->specRHS2 != nullptr)
+        if (rxn->getSpecRHS1() != nullptr && rxn->getSpecRHS2() != nullptr)
         { // second-order backward reaction
-            addSecondOrderKineticTerm(rxn->specRHS1->index, rxn->specRHS2->index, rxn->specRHS1->index, -(rxn->rateConstantBackwardNormalized));
-            addSecondOrderKineticTerm(rxn->specRHS1->index, rxn->specRHS2->index, rxn->specRHS2->index, -(rxn->rateConstantBackwardNormalized));
-            if (rxn->specLHS1 != nullptr) addSecondOrderKineticTerm(rxn->specRHS1->index, rxn->specRHS2->index, rxn->specLHS1->index, rxn->rateConstantBackwardNormalized);
-            if (rxn->specLHS2 != nullptr) addSecondOrderKineticTerm(rxn->specRHS1->index, rxn->specRHS2->index, rxn->specLHS2->index, rxn->rateConstantBackwardNormalized);
+            addSecondOrderKineticTerm(rxn->getSpecRHS1()->getIndex(), rxn->getSpecRHS2()->getIndex(), rxn->getSpecRHS1()->getIndex(), -(rxn->getKbNorm()));
+            addSecondOrderKineticTerm(rxn->getSpecRHS1()->getIndex(), rxn->getSpecRHS2()->getIndex(), rxn->getSpecRHS2()->getIndex(), -(rxn->getKbNorm()));
+            if (rxn->getSpecLHS1() != nullptr) addSecondOrderKineticTerm(rxn->getSpecRHS1()->getIndex(), rxn->getSpecRHS2()->getIndex(), rxn->getSpecLHS1()->getIndex(), rxn->getKbNorm());
+            if (rxn->getSpecLHS2() != nullptr) addSecondOrderKineticTerm(rxn->getSpecRHS1()->getIndex(), rxn->getSpecRHS2()->getIndex(), rxn->getSpecLHS2()->getIndex(), rxn->getKbNorm());
         }
         else
         { // first-order backward reaction
-            if (rxn->specRHS1 != nullptr) s = rxn->specRHS1; else s = rxn->specRHS2;
-            addFirstOrderKineticTerm(s->index, s->index, -(rxn->rateConstantBackwardNormalized));
-            if (rxn->specLHS1 != nullptr) addFirstOrderKineticTerm(s->index, rxn->specLHS1->index, rxn->rateConstantBackwardNormalized); //
-            if (rxn->specLHS2 != nullptr) addFirstOrderKineticTerm(s->index, rxn->specLHS2->index, rxn->rateConstantBackwardNormalized); //
+            if (rxn->getSpecRHS1() != nullptr) s = rxn->getSpecRHS1(); else s = rxn->getSpecRHS2();
+            addFirstOrderKineticTerm(s->getIndex(), s->getIndex(), -(rxn->getKbNorm()));
+            if (rxn->getSpecLHS1() != nullptr) addFirstOrderKineticTerm(s->getIndex(), rxn->getSpecLHS1()->getIndex(), rxn->getKbNorm()); //
+            if (rxn->getSpecLHS2() != nullptr) addFirstOrderKineticTerm(s->getIndex(), rxn->getSpecLHS2()->getIndex(), rxn->getKbNorm()); //
         }
     }
 }
@@ -523,36 +523,36 @@ void Simulation::addRedoxToMatrix()
     size_t oxidx, redidx, specidx;
     double p, Kred, Kox;
 
-    for (auto redox: sys->vecRedox)
+    for (auto redox: sys.vecRedox)
     {
-        p = static_cast<double>(redox->numberElectrons) * f * (exper->initialPotential - redox->standardPotential); // normalized potential
+        p = static_cast<double>(redox->getNe()) * f * (exper.initialPotential - redox->getE0()); // normalized potential
 
-        Kred = redox->rateConstantHeteroNormalized * exp(-redox->alpha * p); // K_red B-V kinetics ("Kf")
-        Kox = redox->rateConstantHeteroNormalized * exp((1.0 - redox->alpha) * p); // K_ox B-V kinetics ("Kb")
+        Kred = redox->getKeNorm() * exp(-redox->getAlpha() * p); // K_red B-V kinetics ("Kf")
+        Kox = redox->getKeNorm() * exp((1.0 - redox->getAlpha()) * p); // K_ox B-V kinetics ("Kb")
 
-        oxidx = redox->specOxidized->index*numGridPoints;
-        redidx = redox->specReduced->index*numGridPoints;
+        oxidx = redox->getSpecOx()->getIndex()*numGridPoints;
+        redidx = redox->getSpecRed()->getIndex()*numGridPoints;
 
         // add terms per redox reaction:
-        addToMatrix(oxidx, redidx, - deltaX * Kox / redox->specOxidized->normalizedDiffusionConstant);  //B0
-        addToMatrix(redidx, oxidx, - deltaX * Kred / redox->specReduced->normalizedDiffusionConstant); //B0
+        addToMatrix(oxidx, redidx, - deltaX * Kox / redox->getSpecOx()->getDiffNorm());  //B0
+        addToMatrix(redidx, oxidx, - deltaX * Kred / redox->getSpecRed()->getDiffNorm()); //B0
         // add to diagonal terms:
-        speciesInRedox[redox->specOxidized->index] = true;
-        matrixB0DiagonalTerms[redox->specOxidized->index] += deltaX * Kred / redox->specOxidized->normalizedDiffusionConstant;
-        speciesInRedox[redox->specReduced->index] = true;
-        matrixB0DiagonalTerms[redox->specReduced->index] += deltaX * Kox / redox->specReduced->normalizedDiffusionConstant;
+        speciesInRedox[redox->getSpecOx()->getIndex()] = true;
+        matrixB0DiagonalTerms[redox->getSpecOx()->getIndex()] += deltaX * Kred / redox->getSpecOx()->getDiffNorm();
+        speciesInRedox[redox->getSpecRed()->getIndex()] = true;
+        matrixB0DiagonalTerms[redox->getSpecRed()->getIndex()] += deltaX * Kox / redox->getSpecRed()->getDiffNorm();
 
         // set current contribution matrix:
-        currentContributionMatrix.coeffRef(static_cast<Eigen::Index>(redox->specOxidized->index), static_cast<Eigen::Index>(redox->index)) = 1.0;
-        currentContributionMatrix.coeffRef(static_cast<Eigen::Index>(redox->specReduced->index), static_cast<Eigen::Index>(redox->index)) = -1.0;
+        currentContributionMatrix.coeffRef(static_cast<Eigen::Index>(redox->getSpecOx()->getIndex()), static_cast<Eigen::Index>(redox->getIndex())) = 1.0;
+        currentContributionMatrix.coeffRef(static_cast<Eigen::Index>(redox->getSpecRed()->getIndex()), static_cast<Eigen::Index>(redox->getIndex())) = -1.0;
     }
 
     // add zero flux condition for all species NOT in redox step:
-    for (auto spec: sys->vecSpecies)
+    for (auto spec: sys.vecSpecies)
     {
-        specidx = spec->index*numGridPoints;
+        specidx = spec->getIndex()*numGridPoints;
 
-        if (!speciesInRedox[spec->index]) // species does not participate in any redox step
+        if (!speciesInRedox[spec->getIndex()]) // species does not participate in any redox step
         {
             for (size_t x = 0; x < numCurrentPoints; x++)
             {
@@ -562,7 +562,7 @@ void Simulation::addRedoxToMatrix()
         }
         else // active redox species
         {
-            addToMatrix(specidx, specidx, 1.0 + matrixB0DiagonalTerms[spec->index]);  // B0
+            addToMatrix(specidx, specidx, 1.0 + matrixB0DiagonalTerms[spec->getIndex()]);  // B0
             addToMatrix(specidx, specidx+1, -1.0);  // B1
         }
     }
@@ -571,7 +571,7 @@ void Simulation::addRedoxToMatrix()
 void Simulation::addBICoeffsToMatrix()
 {
     size_t row, relidx_max;
-    for (auto spec: sys->vecSpecies)
+    for (auto spec: sys.vecSpecies)
     {
         for (size_t x = 1; x < numGridPoints; x++) // since x == 0 corresponds to the boundary condition
         {
@@ -579,20 +579,20 @@ void Simulation::addBICoeffsToMatrix()
                 relidx_max = numDerivPoints-1;
             else
                 relidx_max = numGridPoints-x;
-            row = x + spec->index * numGridPoints; //row in matrixA
+            row = x + spec->getIndex() * numGridPoints; //row in matrixA
             for (size_t relidx = 0; relidx < relidx_max+1; relidx++)
             {
-                addToMatrix(row, relidx+row-1, coeffMatrixN2(x, static_cast<int>(relidx)-1, spec->normalizedDiffusionConstant));
+                addToMatrix(row, relidx+row-1, coeffMatrixN2(x, static_cast<int>(relidx)-1, spec->getDiffNorm()));
             }
         }
     }
 }
 
-double Simulation::coeffMatrixN2(size_t x, int relative_position, double normalizedDiffusionConstant)
+double Simulation::coeffMatrixN2(size_t x, int relative_position, double diffnorm)
 {
     size_t coeffidx = static_cast<size_t>(relative_position+1); // relative_position >= -1
-    double coeff = coeffAlpha[coeffidx] + el->electrodeGeometryFactor*deltaX*paramGammai[x]/(paramR0+gridCoordinate[x])*coeffBeta[coeffidx];
-    coeff *= normalizedDiffusionConstant; // Compton page 88/89
+    double coeff = coeffAlpha[coeffidx] + el.electrodeGeometryFactor*deltaX*paramGammai[x]/(paramR0+gridCoordinate[x])*coeffBeta[coeffidx];
+    coeff *= diffnorm; // Compton page 88/89
     if (relative_position == 0) { coeff -= paramGamma2i[x]/paramLambda; }
 
     return coeff;

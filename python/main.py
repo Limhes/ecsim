@@ -13,12 +13,11 @@ import pyecsim as ecs
 
 if __name__ == '__main__':
 
-    sim = ecs.Simulation(True)  # bool verbosity
+    sim = ecs.Simulation(False)  # bool verbosity
 
     A = ecs.Species('A', 1.0, 1.0e-9)
     B = ecs.Species('B', 0.0, 1.0e-9)
     C = ecs.Species('C', 0.0, 1.0e-9)
-    sim.sys.addSpecies([A, B, C])
 
     rxn1 = ecs.Reaction(B, None, C, None, 10.0, 0.0).enable()
     sim.sys.addReaction(rxn1)
@@ -39,7 +38,7 @@ if __name__ == '__main__':
     plt.figure()
     for index, k_f in enumerate(list(k_fs)):
         cval = 1.0-index/10
-        rxn1.rateConstantForward = k_f
+        rxn1.setKf(k_f)
         [potential, current] = sim.run()
         plt.plot(potential, [i*1.0e6 for i in current], color=cmap_conc(cval))
         E_pc.append(sim.metrics()[3])  # metrics() returns [i_pa, E_pa, i_pc, E_pc]
