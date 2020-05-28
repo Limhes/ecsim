@@ -119,7 +119,7 @@ private:
     double maxConcentration, maxDiffusionConstant, maxRateConstantChem; // Maximum concentration [mol/m3], diffusion coefficient [m2/s], and homo/hetero max rate constants [1/s] and [??]
 public:
     // reaction network structs (vecX is a subset of vecAllX, where vecX contains the items used in the simulation):
-    vector<Species*> vecSpecies, vecAllSpecies; // vector holding a s_species struct per species in the system
+    vector<Species*> vecSpecies; // vector holding a s_species struct per species in the system
     vector<Reaction*> vecReactions, vecAllReactions; // vector holding a s_reaction struct per homogeneous reaction in the system
     vector<Redox*> vecRedox, vecAllRedox; // vector holding a s_redox struct per redox couple in the system
     
@@ -129,20 +129,16 @@ public:
     double getDiffMax() const { return maxDiffusionConstant; }
     double getRateMax() const { return maxRateConstantChem; }
     
-    vector<double>::size_type addSpecies(Species*);
     vector<double>::size_type addRedox(Redox*);
     vector<double>::size_type addReaction(Reaction*);
 
-    string generateUniqueSpeciesName();
-    bool isSpeciesPresentWithName(string);
-    Species* getSpeciesByName(string);
-
     void finalize(double); // parameter: characteristic dimension of system (epsilon)
 private:
-    void addSpeciesToSystem(Species*);
-    
     void setActiveSystem();
+    void setActiveReaction(Reaction*);
+    void setActiveRedox(Redox*);
     void setActiveSpecies(Species*);
+    template <class sysType> void addToVector(sysType, std::vector<sysType>*);
     bool isActiveSpecies(Species*);
 
     void updateSpeciesProperties();

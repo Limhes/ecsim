@@ -13,7 +13,7 @@ import pyecsim as ecs
 
 if __name__ == '__main__':
 
-    sim = ecs.Simulation(False)  # bool verbosity
+    sim = ecs.Simulation(True)  # bool verbosity
 
     A = ecs.Species('A', 1.0, 1.0e-9)
     B = ecs.Species('B', 0.0, 1.0e-9)

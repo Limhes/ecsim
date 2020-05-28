@@ -60,7 +60,7 @@ int main()
         std::cout << potential[i] << "     " << current[i]*1.0e6 << std::endl;
     }
     std::cout << ".....   ....." << std::endl;
-
+    
     std::cout << "Cathodic peak: " << (g_sim.ipc*1.0e6) << " uA at " << g_sim.Epc << " V" << std::endl;
     
     //*/
