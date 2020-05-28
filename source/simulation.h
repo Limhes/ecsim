@@ -8,6 +8,7 @@
 #include <cassert>
 #include <limits>
 #include <vector>
+#include <chrono>
 
 #include <eigen3/Eigen/Core>
 
@@ -22,16 +23,6 @@ const double MIN_STEP_POT = 1.0e-6; // step pot > 1 uV seems reasonable (as in: 
 #include "environment.h"
 #include "experiment.h"
 #include "simulationcore.h"
-
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
-#include <chrono>
-using WinTimestamp = std::chrono::time_point<std::chrono::high_resolution_clock>;
-WinTimestamp getTime();
-double getTimeDifference(WinTimestamp, WinTimestamp);
-#else
-uint64_t getTime();
-double getTimeDifference(uint64_t, uint64_t);
-#endif // WIN32
 
 class Simulation
 {
