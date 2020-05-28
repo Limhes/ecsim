@@ -1,11 +1,28 @@
 #include <iostream>
 #include "simulation.h"
 
-uint64_t getPosixClockTime()
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
+WinTimestamp getTime()
+{
+    return std::chrono::high_resolution_clock::now();
+}
+double getTimeDifference(WinTimestamp start, WinTimestamp end)
+{
+	return static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end-start).count())/1.0e9;
+}
+#else
+uint64_t getTime()
 {
     struct timespec ts = {};
     return (clock_gettime (CLOCK_MONOTONIC, &ts) == 0) ? static_cast<uint64_t>(ts.tv_sec * 1e9 + ts.tv_nsec) : 0;
 }
+double getTimeDifference(uint64_t start, uint64_t end)
+{
+	return static_cast<double>(end-start)/1.0e9;
+}
+#endif // WIN32
+
+
 
 /*===============================================================================================
  * HIGHEST LEVEL CLASS METHODS
@@ -26,8 +43,7 @@ size_t Simulation::run(vector<double> &current, vector<double> &potential)
     Epc = 0.0;
     Epa = 0.0;
 
-    uint64_t startTime, endTime; // timing variables [ns]
-    startTime = getPosixClockTime();
+    auto startTime = getTime();
     
     // conditioning step:
     delaySegment(exper.conditioningPotential, exper.conditioningTime);
@@ -53,8 +69,8 @@ size_t Simulation::run(vector<double> &current, vector<double> &potential)
         scanSegment(segmentStartPotential, exper.finalPotential, recordCurrent, current, potential);
     }
     
-    endTime = getPosixClockTime();
-    output_stream << "Est. simulation time (" << current.size() << " steps &amp; " << sz.numGridPoints << " grid points) = " << static_cast<double>(endTime - startTime)/1.0e9 << " s<br />" << endl;
+    auto endTime = getTime();
+    output_stream << "Est. simulation time (" << current.size() << " steps &amp; " << sz.numGridPoints << " grid points) = " << getTimeDifference(startTime, endTime) << " s<br />" << endl;
 
     return current.size();
 }
