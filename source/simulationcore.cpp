@@ -38,6 +38,7 @@ double Sizing::initialize(System *sys, Electrode *el, Environment *env, Experime
     numSpecies = sys->vecSpecies.size();
     numRedox = sys->vecRedox.size();
     numReactions = sys->vecReactions.size();
+    mainDimension = numSpecies*numGridPoints;
     
         // print scaling parameters:
     //output_stream << "Diff coeff [m2/s]: max = " << sys.getDiffMax() << endl;
@@ -111,10 +112,10 @@ void Core::updateKineticsInMatrix(double factor)
         {
             rate = factor * get<3>(kinTerm) * (sz->deltaX)*(sz->deltaX)*paramGamma2i[x];
             
-            msys.addToValue( spec3, x, spec1, x, rate * gridConcentration(spec2, x) );
-            msys.addToValue( spec3, x, spec2, x, rate * gridConcentration(spec1, x) );
+            msys.addToValue( spec3, x, spec1, x, rate * gridConcentration(x, spec2) );
+            msys.addToValue( spec3, x, spec2, x, rate * gridConcentration(x, spec1) );
             
-            independentTerms(spec3, x) += rate * gridConcentration(spec1, x) * gridConcentration(spec2, x);
+            independentTerms(x, spec3) += rate * gridConcentration(x, spec1) * gridConcentration(x, spec2);
         }
     }
 }
@@ -126,7 +127,7 @@ void Core::updateIndependentTerms()
     for (auto spec: sys->vecSpecies)
     {
         //Zero at matrix rows storing surface conditions
-        independentTerms(spec->getIndex(), 0) = 0.0;
+        independentTerms(0, spec->getIndex()) = 0.0;
 
         for (size_t x = 1; x < sz->numGridPoints; x++)
         {
@@ -134,15 +135,12 @@ void Core::updateIndependentTerms()
              * the system of equations is ('a' are coefficients, 'x(i,s)' the next concentrations at grid point i for species s):
              * a(-1)*x(i-1,s) + a(0)*x(i,s) + a(+1)*x(i+1,s) + a(+2)*x(i+2,s) + (etc.) = b(i,s)
              */
-            independentTerms(spec->getIndex(), x) = -gridConcentration(spec->getIndex(), x) * paramGamma2i[x]/(sz->paramLambda);
+            independentTerms(x, spec->getIndex()) = -gridConcentration(x, spec->getIndex()) * paramGamma2i[x]/(sz->paramLambda);
+            
             // however, when i>numGridPoints, then x(i+i) reduces to the (never changing) bulk concentration and we add them into 'b', because they are now known:
             if (x >= EndNormal)
-            {
-                for (int jj = 0; jj <= static_cast<int>(x - EndNormal); jj++)
-                {
-                    independentTerms(spec->getIndex(), x) -= coeffMatrixN2(x, static_cast<int>(sz->numDerivPoints)-jj-2, spec->getDiffNorm()) * spec->getConcNormEquil();
-                }
-            }
+                for (int jj = 0; jj <= x - EndNormal; jj++)
+                    independentTerms(x, spec->getIndex()) -= coeffMatrixN2(x, sz->numDerivPoints-jj-2, spec->getDiffNorm()) * spec->getConcNormEquil();
         }
     }
 }
@@ -162,10 +160,10 @@ void Core::updateRedoxInMatrix(double potential)
         Kox =  (sz->deltaX) * redox->getKeNorm() * exp((1.0 - redox->getAlpha()) * p); // B-V kinetics
 
         // add terms to matrix per redox reaction:
-        msys.changeValue( redox->getSpecOx()->getIndex(), 0,
+        msys.setValue( redox->getSpecOx()->getIndex(), 0,
                           redox->getSpecRed()->getIndex(), 0,
                           -Kox / redox->getSpecOx()->getDiffNorm() );   // B0
-        msys.changeValue( redox->getSpecRed()->getIndex(), 0,
+        msys.setValue( redox->getSpecRed()->getIndex(), 0,
                           redox->getSpecOx()->getIndex(), 0, 
                           -Kred / redox->getSpecRed()->getDiffNorm() ); // B0
 
@@ -179,8 +177,8 @@ void Core::updateRedoxInMatrix(double potential)
     {
         if (speciesInRedox[s]) // active redox species
         {
-            msys.changeValue( s, 0, s, 0,  1.0 + matrixB0DiagonalTerms[s] ); // B0
-            msys.changeValue( s, 0, s, 1, -1.0 ); // B1
+            msys.setValue( s, 0, s, 0,  1.0 + matrixB0DiagonalTerms[s] ); // B0
+            msys.setValue( s, 0, s, 1, -1.0 ); // B1
         }
     }
 }
@@ -193,11 +191,9 @@ double Core::calcCurrentFromFlux()
     for (auto spec: sys->vecSpecies)
     {
         speciesflux = 0;
-        for(size_t kk = 0; kk < sz->numCurrentPoints; kk++)
-        {
-            speciesflux += coeffBeta0[kk] * gridConcentration(spec->getIndex(), kk);
-        }
-        currentContributionSpeciesFlux[static_cast<Eigen::Index>(spec->getIndex())] = speciesflux * spec->getDiffNorm();
+        for(size_t x = 0; x < sz->numCurrentPoints; x++)
+            speciesflux += coeffBeta0[x] * gridConcentration(x, spec->getIndex());
+        currentContributionSpeciesFlux[spec->getIndex()] = speciesflux * spec->getDiffNorm();
     }
 
     /* SOLVE FOR THE FLUX PER REDOX REACTION BY LEAST SQUARES
@@ -226,15 +222,11 @@ double Core::calcCurrentFromFlux()
     // sum to get total flux:
     totalflux = 0.0;
     for (auto redox: sys->vecRedox)
-    {
-        // this doesn't work well for n > 1 --> why not?
-        totalflux -= currentContributionRedoxFlux[static_cast<Eigen::Index>(redox->getIndex())]
-                     * static_cast<double>(redox->getNe());
-    }
-    totalflux /= (sz->deltaX); // totalflux := dC/dX
+        totalflux -= currentContributionRedoxFlux[redox->getIndex()] * static_cast<double>(redox->getNe());
+    totalflux *= (sz->currentFromFlux) / (sz->deltaX); // totalflux := dC/dX
 
     // calculate current from flux:
-    return totalflux * (sz->currentFromFlux);
+    return totalflux;
 }
 
 /////////////////////////////////////////////
@@ -242,9 +234,9 @@ double Core::calcCurrentFromFlux()
 void Core::initVectorsEtc()
 {
     // initialize independent terms and b & x vectors:
-    independentTerms = Eigen::MatrixXd::Zero(sz->numSpecies, sz->numGridPoints);
-    gridConcentration = Eigen::MatrixXd(sz->numSpecies, sz->numGridPoints);
-    gridConcentrationPrevious = Eigen::MatrixXd::Zero(sz->numSpecies, sz->numGridPoints);
+    independentTerms = Eigen::MatrixXd::Zero(sz->numGridPoints, sz->numSpecies);
+    gridConcentration = Eigen::MatrixXd(sz->numGridPoints, sz->numSpecies);
+    gridConcentrationPrevious = Eigen::MatrixXd::Zero(sz->numGridPoints, sz->numSpecies);
     
     // initialize distance in grid, expansion factor gamma and concentration vectors:
     gridCoordinate.resize(sz->numGridPoints);
@@ -257,21 +249,21 @@ void Core::initVectorsEtc()
         gridCoordinate[x] = (x == 0) ? 0.0 : gridCoordinate[x-1] + (sz->deltaX)*paramGammai[x-1];
 
         for (auto spec: sys->vecSpecies)
-            gridConcentration(spec->getIndex(), x) = spec->getConcNormEquil();
+            gridConcentration(x, spec->getIndex()) = spec->getConcNormEquil();
     }
     
     // obtain flux condition coefficients:
     coeffBeta0.resize(sz->numCurrentPoints);
     for(size_t i = 0; i < sz->numCurrentPoints; i++)
-        coeffBeta0[i] = Beta_N_1(static_cast<int>(sz->numCurrentPoints), static_cast<int>(i), sz->paramGamma);
+        coeffBeta0[i] = Beta_N_1(sz->numCurrentPoints, i, sz->paramGamma);
     
     // obtain diffusion coefficients:
     coeffAlpha.resize(sz->numDerivPoints);
     coeffBeta.resize(sz->numDerivPoints);
     for(size_t d = 0; d < sz->numDerivPoints; d++)
     {
-        coeffAlpha[d] = Alpha_N_2(static_cast<int>(sz->numDerivPoints), static_cast<int>(d)-1, sz->paramGamma);
-        coeffBeta[d]  =  Beta_N_2(static_cast<int>(sz->numDerivPoints), static_cast<int>(d)-1, sz->paramGamma);
+        coeffAlpha[d] = Alpha_N_2(sz->numDerivPoints, d-1, sz->paramGamma);
+        coeffBeta[d]  =  Beta_N_2(sz->numDerivPoints, d-1, sz->paramGamma);
     }
 
     // initilize redox/current vectors & matrix:
@@ -283,7 +275,6 @@ void Core::initVectorsEtc()
     currentContributionSpeciesFlux = Eigen::VectorXd::Zero(sz->numSpecies);
     currentContributionRedoxFlux = Eigen::VectorXd::Zero(sz->numRedox);
 }
-
 
 void Core::addKineticsToMatrix()
 {
@@ -315,7 +306,7 @@ void Core::addHalfReactionKineticsToMatrix(Species *f1, Species *f2, Species *b1
     }
     else
     {
-        // reaction has no products or reactants; is that a problem?
+        // reaction has either no products or no reactants; is that a problem? throw error?
     }
 }
 
@@ -323,7 +314,7 @@ void Core::addFirstOrderKineticTerm(Species *spec1, Species *spec2, double normr
 {
     if (abs(normrate) > MIN_RATE && spec2 != nullptr)
         for(size_t x = 1; x < sz->numGridPoints; x++)
-            msys.addToMatrix(spec2->getIndex(), x, spec1->getIndex(), x, normrate*(sz->deltaX)*(sz->deltaX)*paramGamma2i[x]);
+            msys.setValue(spec2->getIndex(), x, spec1->getIndex(), x, normrate*(sz->deltaX)*(sz->deltaX)*paramGamma2i[x]);
 }
 
 void Core::addSecondOrderKineticTerm(Species *spec1, Species *spec2, Species *spec3, double normrate)
@@ -334,53 +325,24 @@ void Core::addSecondOrderKineticTerm(Species *spec1, Species *spec2, Species *sp
 
 void Core::addRedoxToMatrix(double ip)
 {
-    double p, Kred, Kox;
-
     for (auto redox: sys->vecRedox)
     {
-        p = static_cast<double>(redox->getNe()) * (sz->f) * (ip - redox->getE0()); // normalized potential
-
-        Kred = (sz->deltaX) * redox->getKeNorm() * exp(      -redox->getAlpha()  * p); // K_red B-V kinetics ("Kf")
-        Kox  = (sz->deltaX) * redox->getKeNorm() * exp((1.0 - redox->getAlpha()) * p); // K_ox  B-V kinetics ("Kb")
-
-        // add terms per redox reaction:
-        msys.addToMatrix(redox->getSpecOx()->getIndex(),  0,
-                         redox->getSpecRed()->getIndex(), 0,
-                         -Kox / redox->getSpecOx()->getDiffNorm());  //B0
-        msys.addToMatrix(redox->getSpecRed()->getIndex(), 0,
-                         redox->getSpecOx()->getIndex(),  0,
-                         -Kred / redox->getSpecRed()->getDiffNorm()); //B0
-        
         // keep track of which species partake in redox steps:
         speciesInRedox[redox->getSpecOx()->getIndex()] = true;
         speciesInRedox[redox->getSpecRed()->getIndex()] = true;
-        
-        // add to diagonal terms:
-        matrixB0DiagonalTerms[redox->getSpecOx()->getIndex()] += Kred / redox->getSpecOx()->getDiffNorm();
-        matrixB0DiagonalTerms[redox->getSpecRed()->getIndex()] += Kox / redox->getSpecRed()->getDiffNorm();
-
+    
         // set current contribution matrix:
-        currentContributionMatrix.coeffRef(static_cast<Eigen::Index>(redox->getSpecOx()->getIndex()), static_cast<Eigen::Index>(redox->getIndex())) = 1.0;
-        currentContributionMatrix.coeffRef(static_cast<Eigen::Index>(redox->getSpecRed()->getIndex()), static_cast<Eigen::Index>(redox->getIndex())) = -1.0;
+        currentContributionMatrix.coeffRef(redox->getSpecOx()->getIndex(),  redox->getIndex()) = 1.0;
+        currentContributionMatrix.coeffRef(redox->getSpecRed()->getIndex(), redox->getIndex()) = -1.0;
     }
-
-    // add zero flux condition for all species NOT in redox step:
+    
+    // instead of zero flux condition function:
     for (size_t s = 0; s < sz->numSpecies; s++)
-    {
-        if (!speciesInRedox[s]) // species does not participate in any redox step
-        {
+        if (!speciesInRedox[s])
             for (size_t x = 0; x < sz->numCurrentPoints; x++)
-            {
-                // instead of zero flux condition function:
-                msys.addToMatrix(s, 0, s, x, coeffBeta0[x]/(sz->deltaX));
-            }
-        }
-        else // active redox species
-        {
-            msys.addToMatrix(s, 0, s, 0,  1.0 + matrixB0DiagonalTerms[s]);  // B0
-            msys.addToMatrix(s, 0, s, 1, -1.0);  // B1
-        }
-    }
+                msys.setValue(s, 0, s, x, coeffBeta0[x]/(sz->deltaX));
+
+    updateRedoxInMatrix(ip);
 }
 
 void Core::addBICoeffsToMatrix() // Backwards Implicit coefficients
@@ -390,15 +352,13 @@ void Core::addBICoeffsToMatrix() // Backwards Implicit coefficients
     {
         for (size_t x = 1; x < sz->numGridPoints; x++) // since x == 0 corresponds to the boundary condition
         {
-            if (x < sz->numGridPoints - sz->numDerivPoints + 2)
-                relidx_max = sz->numDerivPoints-1;
-            else
-                relidx_max = sz->numGridPoints-x;
+            // the "relative index" goes from -1 to numDerivPoints-1, but is bounded by the size of the grid:
+            relidx_max = std::min(sz->numDerivPoints-1, sz->numGridPoints-x);
             
-            for (size_t relidx = 0; relidx < relidx_max+1; relidx++)
+            for (int relidx = -1; relidx < static_cast<int>(relidx_max); relidx++)
             {
-                msys.addToMatrix(spec->getIndex(), x, spec->getIndex(), x+relidx-1,
-                                 coeffMatrixN2(x, static_cast<int>(relidx)-1, spec->getDiffNorm()));
+                msys.setValue(spec->getIndex(), x, spec->getIndex(), x+relidx,
+                                 coeffMatrixN2(x, relidx, spec->getDiffNorm()));
             }
         }
     }
@@ -419,13 +379,15 @@ double Core::coeffMatrixN2(size_t x, int relative_position, double diffnorm)
  * MATRIXSYSTEM
  *=============================================================================================*/
 
+using namespace std::placeholders;
+    
 void MatrixSystem::initialize(Sizing *new_sz)
 {
     sz = new_sz;
-    size_t numNonZeroesTotal = 15*sz->numSpecies*sz->numGridPoints;  // estimation (15 > 2*numDerivPoints)
+    size_t numNonZeroesTotal = 15*sz->mainDimension;  // estimation (15 > 2*numDerivPoints)
     
-    vecb = Eigen::VectorXd::Zero(sz->numSpecies*sz->numGridPoints);
-    vecx = Eigen::VectorXd::Zero(sz->numSpecies*sz->numGridPoints);
+    vecb = Eigen::VectorXd::Zero(sz->mainDimension);
+    vecx = Eigen::VectorXd::Zero(sz->mainDimension);
     
     // initialize Triplet container
     tripletContainerMatrixA.clear();
@@ -435,55 +397,33 @@ void MatrixSystem::initialize(Sizing *new_sz)
     matrixA.setZero(); // removes all non-zeros
     matrixA.resize(0,0);
     matrixA.data().squeeze(); // removes all items from matrix
-    matrixA.resize(static_cast<Eigen::Index>(sz->numSpecies*sz->numGridPoints),
-                   static_cast<Eigen::Index>(sz->numSpecies*sz->numGridPoints));
-    matrixA.reserve(static_cast<Eigen::Index>(numNonZeroesTotal));
-    
+    matrixA.resize(sz->mainDimension, sz->mainDimension);
+    matrixA.reserve(numNonZeroesTotal);
     matrixPatternAnalyzed = false;
+    
+    // change setValue function pointer:
+    setValue = std::bind(&MatrixSystem::setValueTriplet, this, _1, _2, _3, _4, _5);
 }
 
 void MatrixSystem::solve(Eigen::MatrixXd *independentTerms, Eigen::MatrixXd *gridConcentration)
 {
     // pattern needs to be analyzed once after matrix changed:
     if (!matrixPatternAnalyzed) { sparseMatrixSolver.analyzePattern(matrixA); matrixPatternAnalyzed = true; }
-    
-    sparseMatrixSolver.factorize(matrixA);
 
-    // flatten matrix to vector:
-    for (size_t s = 0; s < sz->numSpecies; s++)
-        for (size_t x = 0; x < sz->numGridPoints; x++)
-            vecb[static_cast<Eigen::Index>( s*(sz->numGridPoints)+x )] = (*independentTerms)(s, x);
-    
+    // flatten matrix to vector (because solver uses 2D*1D=1D sizing):
+    vecb = Eigen::Map<Eigen::VectorXd>(independentTerms->data(), sz->mainDimension);
     // this is where the magic happens:
+    sparseMatrixSolver.factorize(matrixA);
     vecx = sparseMatrixSolver.solve(vecb);
-    
     // reshape vector into matrix:
-    for (size_t s = 0; s < sz->numSpecies; s++)
-        for (size_t x = 0; x < sz->numGridPoints; x++)
-            (*gridConcentration)(s, x) = vecx[static_cast<Eigen::Index>( s*(sz->numGridPoints)+x )];
-}
-
-void MatrixSystem::addToMatrix(size_t s1, size_t g1, size_t s2, size_t g2, double value)
-{
-    tripletContainerMatrixA.push_back( Triplet(static_cast<int>(s1*(sz->numGridPoints)+g1),
-                                                  static_cast<int>(s2*(sz->numGridPoints)+g2), value) );
+    *gridConcentration = Eigen::Map<Eigen::MatrixXd>(vecx.data(), sz->numGridPoints, sz->numSpecies);
 }
 
 void MatrixSystem::createMatrix()
 {
-    // set initial values in matrix:
+    // create matrix from triplets:
     matrixA.setFromTriplets(tripletContainerMatrixA.begin(), tripletContainerMatrixA.end());
+    
+    // change setValue function pointer:
+    setValue = std::bind(&MatrixSystem::setValueMatrix, this, _1, _2, _3, _4, _5);
 }
-
-void MatrixSystem::changeValue(size_t s1, size_t g1, size_t s2, size_t g2, double value)
-{
-    matrixA.coeffRef(static_cast<int>(s1*(sz->numGridPoints)+g1),
-                     static_cast<int>(s2*(sz->numGridPoints)+g2)) = value;
-}
-
-void MatrixSystem::addToValue(size_t s1, size_t g1, size_t s2, size_t g2, double value)
-{
-    matrixA.coeffRef(static_cast<int>(s1*(sz->numGridPoints)+g1),
-                     static_cast<int>(s2*(sz->numGridPoints)+g2)) += value;
-}
- 

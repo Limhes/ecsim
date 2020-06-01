@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <cmath>
+#include <functional>
+#include <algorithm> // integer max() & min()
 
 #include <eigen3/Eigen/Eigen>
 #include <eigen3/Eigen/Dense>
@@ -44,7 +46,8 @@ public:
     
     size_t numSpecies, numRedox, numReactions;
     size_t numGridPoints, numCurrentPoints = 5, numDerivPoints = 6; // number of points in grid, number of points for calculation of current, number of points for diffusion
-
+    size_t mainDimension; // used heavily: numSpecies*numGridPoints
+    
     double currentFromFlux; // to calculate current from species' flux
     
     double initialize(System*, Electrode*, Environment*, Experiment*, ostream &);
@@ -57,17 +60,21 @@ private:
     
     vector<Triplet> tripletContainerMatrixA; // this container holds (row, col, value) triplets before matrixA is assembled
     Eigen::SparseMatrix<double> matrixA; // matrix to be inverted: Ax=b corresponds to matrixA * vecx = vecb
-    bool matrixPatternAnalyzed;
-    Solver sparseMatrixSolver; // solver that inverts the sparse matrixA using LU factorization
     Eigen::VectorXd vecb, vecx; // vectors, defininition see above
+    Solver sparseMatrixSolver; // solver that inverts the sparse matrixA using LU factorization
+    
+    bool matrixPatternAnalyzed;
+    
+    inline size_t idx(size_t s, size_t x) { return (s*(sz->numGridPoints)+x); };
+    inline void setValueMatrix(size_t s1, size_t g1, size_t s2, size_t g2, double value) { matrixA.coeffRef(idx(s1,g1), idx(s2,g2)) = value; };
+    inline void setValueTriplet(size_t s1, size_t g1, size_t s2, size_t g2, double value) { tripletContainerMatrixA.push_back(Triplet( idx(s1,g1), idx(s2,g2), value)); };
 public:
     void initialize(Sizing*);
     
     void solve(Eigen::MatrixXd*, Eigen::MatrixXd*);
-    void addToMatrix(size_t, size_t, size_t, size_t, double); // add to tripletcontainer
-    void createMatrix(); // create matrix from tripletcontainer
-    void changeValue(size_t, size_t, size_t, size_t, double); // change directly in matrix:   matrix.coeffref(x,y) = val
-    void addToValue(size_t, size_t, size_t, size_t, double); // sum value directly in matrix: matrix.coeffref(x,y) += val
+    void createMatrix();
+    inline void addToValue(size_t s1, size_t g1, size_t s2, size_t g2, double value) { matrixA.coeffRef(idx(s1,g1), idx(s2,g2)) += value; };
+    std::function<void(size_t, size_t, size_t, size_t, double)> setValue;
 };
 
 class Core
