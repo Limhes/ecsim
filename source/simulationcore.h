@@ -34,22 +34,33 @@ const double CONST_R = 8.31446261815324;
 class Sizing
 {
 public:
+    /*
+     * PARAMETERS
+     */
+    // physical:
     double f; // F/RT
-    
     // dimensionless parameters:
     double deltaTheta = 0.2; // potential step
-    double deltaX; // smallest distance
     double paramGamma = 1.67; // grid expansion factor
-    double paramR0, electrodeGeometryFactor; // electrode parameters
-    double paramLambda; // kinetic parameter of the system
     double minF = 2.2, maxF = 6.2, minLogRate = 3.0, maxLogRate = 7.0; // parameters that relate to homogeneous reaction rates
-    
+    double deltaX, deltaT; // smallest dimensionless distance & time
+    double paramR0, electrodeGeometryFactor; // electrode parameters
+    // conversion:
+    double currentFromFlux; // to calculate current from species' flux
+    // sizes of system parts:
     size_t numSpecies, numRedox, numReactions;
     size_t numGridPoints, numCurrentPoints = 5, numDerivPoints = 6; // number of points in grid, number of points for calculation of current, number of points for diffusion
     size_t mainDimension; // used heavily: numSpecies*numGridPoints
+    /*
+     * COEFFICIENTS & COORDINATES
+     */
+    vector<double> paramGamma2i2dX; // (grid expansion factor^x * deltaX)^2, pre-calculated for all points in grid
+    vector<double> coeffBeta0; // coefficients for current (beta0)
+    vector<Eigen::MatrixXd> coeffN2; // matrix storing all the pre-calculated diffusion coefficients
     
-    double currentFromFlux; // to calculate current from species' flux
-    
+    /*
+     * METHODS
+     */
     double initialize(System*, Electrode*, Environment*, Experiment*, ostream &);
 };
 
@@ -84,8 +95,6 @@ private:
     Sizing* sz;
     System* sys;
     
-    vector<double> gridCoordinate, paramGammai, paramGamma2i; // grid coordinates and expansion factor (and its ^2), pre-calculated for all points in grid
-    vector<double> coeffAlpha, coeffBeta, coeffBeta0; // coefficients for diffusion (alpha and beta) and current (beta0)
     Eigen::MatrixXd independentTerms; // "independent terms" equals b, the right-hand side in Ax=b when solving for x [species_index, grid_location]
     Eigen::MatrixXd gridConcentration, gridConcentrationPrevious; // current concentrations in grid for all species [species_index, grid_location]
     
@@ -114,8 +123,6 @@ public:
     void addHalfReactionKineticsToMatrix(Species*, Species*, Species*, Species*, double);
     void addFirstOrderKineticTerm(Species*, Species*, double);
     void addSecondOrderKineticTerm(Species*, Species*, Species*, double);
-
-    double coeffMatrixN2(size_t, int, double);
 };
 
 #endif // SIMULATIONCORE_H

@@ -1,6 +1,7 @@
 #include "simulation.h"
 #include <stdlib.h>
 #include <iostream>
+#include <cmath>
 
 int main()
 {
@@ -15,7 +16,7 @@ int main()
     g_sim.exper.setInitialPotential(0.0);
     g_sim.exper.setFinalPotential(0.0);
     g_sim.exper.setVertexDelay(0.0);
-    g_sim.exper.setScanRate(0.1);
+    g_sim.exper.setScanRate(1.0);
     g_sim.exper.setNumCycles(1);
     
     // set up environment:
@@ -41,7 +42,7 @@ int main()
     // add homogeneous reactions of the form A+B <-> C+D
     // parameters: (A, B, C, D, k_f, k_b), pass nullptr for "no species"
     Reaction rxn(&spec_red, nullptr, &spec_prod, nullptr, 10.0, 0.0); // forward, backward rate constant
-    rxn.enable(); // starts disabled, so have to manually enable it
+    //rxn.enable(); // starts disabled, so have to manually enable it
     g_sim.sys.addReaction(&rxn);
 
     // set up electrode (type and geometry):
@@ -59,9 +60,11 @@ int main()
     for (int i = 0; i < 5; i++) {
         std::cout << potential[i] << "     " << current[i]*1.0e6 << std::endl;
     }
-    std::cout << ".....   ....." << std::endl;
+    std::cout << ".....   ....." << std::endl << std::endl;
     
+    const double curr_calc = -0.4463*96485.3*3.14159*1.0e-6*std::sqrt(96485.3*1.0*1.0e-9/(8.3145*293.15));
     std::cout << "Cathodic peak: " << (g_sim.ipc*1.0e6) << " uA at " << g_sim.Epc << " V" << std::endl;
+    std::cout << "Deviation from Randles-Sevcik: " << 2.0*(curr_calc-g_sim.ipc)/(curr_calc+g_sim.ipc)*100.0 << "%" << std::endl;
     
     //*/
     return 0;

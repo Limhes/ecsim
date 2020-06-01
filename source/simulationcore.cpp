@@ -1,49 +1,81 @@
 #include "simulationcore.h"
 
 /*===============================================================================================
- * SIZING
+ * SIZING (PARAMETERS, COORDINATES, COEFFICIENTS)
  *=============================================================================================*/
 
 double Sizing::initialize(System *sys, Electrode *el, Environment *env, Experiment *exper, ostream &output_stream)
 {
     // some parameters
     f = CONST_F / (CONST_R * env->temperature);
-    double totalTime = exper->totalTime();
-    double totalTheta = totalTime * f * exper->scanRate;
     
     /* system dimensioning according to Compton (Understanding Voltammetry)
      * deltaTheta is a fixed value, taken from Compton
-     * to increase accuracy, we need to decrease deltaX, which doesn't need a lot of extra time to solve!!!
+     */
+    // calculate dimensionless parameters:
+    const double sigma = exper->scanRate * f * std::pow(el->epsilon, 2) / sys->getDiffMax(); // scan rate
+    /* kinetic parameter F:
+     * to increase accuracy, we need to make deltaX smaller to accomodate for the fastest chemical reaction
      * the factor F in deltaX = pow(10.0, -F-0.5*log10(sigma)); should e.g. go from 2.2 to 4.2
      */
-    double deltaE = deltaTheta/f;
-    double F, logRate = log10(sys->getRateMax());
+    double F;
+    const double logRate = log10(sys->getRateMax());
     if (logRate < minLogRate) { F = minF; }
     else if (logRate <= maxLogRate) { F = minF + (logRate - minLogRate) * (maxF - minF) / (maxLogRate - minLogRate); }
     else { F = maxF; }
-    double sigma = el->epsilon * el->epsilon / sys->getDiffMax() * f * exper->scanRate; // dimensionless scan rate
-    double maxT = totalTheta / sigma; // maxT = total experiment time [1]
-    double  deltaT = deltaTheta / sigma; // deltaT = size of smallest time step [1]
-    double maxX = 6.0*sqrt(maxT); // maxX = maximum distance from electrode [1]
+    // distance and time step:
     deltaX = pow(10.0, -F) / sqrt(sigma); // Compton (page 64) leads to: dX = 10^(-2.2-0.5*sigma), deltaX = size of smallest grid element [1]
-    paramLambda = deltaT / (deltaX * deltaX);
+    deltaT = deltaTheta / sigma; // deltaT = size of smallest time step [1]
+    // electrode and current factors & parameters:
     currentFromFlux = el->epsilon * CONST_F * sys->getDiffMax() * sys->getConcMax();
-    electrodeGeometryFactor = el->electrodeGeometryFactor;
-    paramR0 = el->epsilon / sqrt(sys->getDiffMax() * totalTime);
-
-    // create expanding grid and set dimensions:
-    numGridPoints = 1;
-    do { numGridPoints++; } while (deltaX < maxX * (paramGamma - 1.0) / ( pow(paramGamma, numGridPoints-1) - 1.0 ));
+    
+    // create expanding grid:
+    const double maxX = 6.0*sqrt(exper->totalTime() * f * exper->scanRate / sigma); // maxX = maximum distance from electrode [1]
+    numGridPoints = static_cast<int>(std::ceil( std::log((maxX/deltaX * (paramGamma-1.0))+1.0) / std::log(paramGamma) )) + 1;
+    // set system dimensions:
     numCurrentPoints = min(numCurrentPoints, numGridPoints); // truncate number of current points if it is larger than number of grid points
     numSpecies = sys->vecSpecies.size();
     numRedox = sys->vecRedox.size();
     numReactions = sys->vecReactions.size();
     mainDimension = numSpecies*numGridPoints;
     
-        // print scaling parameters:
-    //output_stream << "Diff coeff [m2/s]: max = " << sys.getDiffMax() << endl;
-    //output_stream << "Conc [mol/m3]: max = " << sys.getConcMax() << endl;
-    //output_stream << "Electrode [m]: epsilon = " << el.epsilon << ", area = " << el.electrodeArea << endl;
+    // initialize distance in grid, expansion factor gamma and concentration vectors:
+    paramGamma2i2dX.resize(numGridPoints);
+    for (size_t x = 0; x < numGridPoints; x++)
+        paramGamma2i2dX[x] = std::pow(paramGamma, 2*x) * std::pow(deltaX, 2);
+    
+    // obtain flux condition coefficients:
+    coeffBeta0.resize(numCurrentPoints);
+    for (size_t i = 0; i < numCurrentPoints; i++)
+        coeffBeta0[i] = Beta_N_1(numCurrentPoints, i, paramGamma);
+    
+    // obtain (N,2) coefficients "a" and populate matrices (one for each species)
+    // see also Molina (10.1016/j.cplett.2015.11.011) equation (14)
+    coeffN2.resize(numSpecies);
+    double coeff, gridCoordinate = 0, gammaxdx, alpha, beta;
+    const double paramR0 = el->epsilon / sqrt(sys->getDiffMax() * exper->totalTime());
+    for (size_t s = 0; s < numSpecies; s++)
+    {
+        coeffN2[s] = Eigen::MatrixXd(numGridPoints, numDerivPoints);
+        for (size_t x = 0; x < numGridPoints; x++)
+        {
+            gammaxdx = std::pow(paramGamma, x) * deltaX;
+            for (size_t d = 0; d < numDerivPoints; d++)
+            {
+                alpha = Alpha_N_2(numDerivPoints, d-1, paramGamma);
+                beta  =  Beta_N_2(numDerivPoints, d-1, paramGamma);
+                
+                coeff = alpha + beta*el->electrodeGeometryFactor*gammaxdx/(paramR0+gridCoordinate);
+                coeff *= sys->vecSpecies[s]->getDiffNorm(); // Compton page 88/89
+                coeff -= (d == 1) ? paramGamma2i2dX[x]/deltaT : 0.0;
+                coeffN2[s](x, d) = coeff;
+            }
+            gridCoordinate += gammaxdx;
+        }
+    }
+    
+    // print scaling parameters:
+    /*
     output_stream << "Initial concentrations after equilibration: (";
     for (auto spec: sys->vecSpecies)
         output_stream << "[" << spec->getName() << "] = " << spec->getConcNormEquil() << ((spec!=sys->vecSpecies.back())?", ":"");
@@ -57,8 +89,9 @@ double Sizing::initialize(System *sys, Electrode *el, Environment *env, Experime
     output_stream << "Number of grid points = " << numGridPoints << "<br />" << endl;
     output_stream << "Number of current points = " << numCurrentPoints << endl;
     output_stream << "Number of deriv points = " << numDerivPoints << endl;
+    */
     
-    return deltaE;
+    return deltaTheta/f;
 }
 
 /*===============================================================================================
@@ -110,7 +143,7 @@ void Core::updateKineticsInMatrix(double factor)
 
         for (size_t x = 1; x < sz->numGridPoints; x++)
         {
-            rate = factor * get<3>(kinTerm) * (sz->deltaX)*(sz->deltaX)*paramGamma2i[x];
+            rate = factor * get<3>(kinTerm) * sz->paramGamma2i2dX[x];
             
             msys.addToValue( spec3, x, spec1, x, rate * gridConcentration(x, spec2) );
             msys.addToValue( spec3, x, spec2, x, rate * gridConcentration(x, spec1) );
@@ -122,25 +155,23 @@ void Core::updateKineticsInMatrix(double factor)
 
 void Core::updateIndependentTerms()
 {
-    size_t EndNormal = sz->numGridPoints - sz->numDerivPoints + 2;
-
-    for (auto spec: sys->vecSpecies)
+    for (size_t s = 0; s < sz->numSpecies; s++)
     {
         //Zero at matrix rows storing surface conditions
-        independentTerms(0, spec->getIndex()) = 0.0;
+        independentTerms(0, s) = 0.0;
 
-        for (size_t x = 1; x < sz->numGridPoints; x++)
+        for (int x = 1; x < sz->numGridPoints; x++)
         {
             /* independentTerms is the RHS ('b') of the matrix equation A*x=b, where 'x' is the concentration at T+dT (the 'next' concentration)
              * the system of equations is ('a' are coefficients, 'x(i,s)' the next concentrations at grid point i for species s):
              * a(-1)*x(i-1,s) + a(0)*x(i,s) + a(+1)*x(i+1,s) + a(+2)*x(i+2,s) + (etc.) = b(i,s)
              */
-            independentTerms(x, spec->getIndex()) = -gridConcentration(x, spec->getIndex()) * paramGamma2i[x]/(sz->paramLambda);
+            independentTerms(x, s) = -gridConcentration(x, s) * sz->paramGamma2i2dX[x]/sz->deltaT; // see also Molina (10.1016/j.cplett.2015.11.011) equation (14)
             
             // however, when i>numGridPoints, then x(i+i) reduces to the (never changing) bulk concentration and we add them into 'b', because they are now known:
-            if (x >= EndNormal)
-                for (int jj = 0; jj <= x - EndNormal; jj++)
-                    independentTerms(x, spec->getIndex()) -= coeffMatrixN2(x, sz->numDerivPoints-jj-2, spec->getDiffNorm()) * spec->getConcNormEquil();
+            if (x > sz->numGridPoints - sz->numDerivPoints + 1)
+                for (int d = sz->numGridPoints-x+1; d < sz->numDerivPoints; d++)
+                    independentTerms(x, s) -= sz->coeffN2[s](x, d) * sys->vecSpecies[s]->getConcNormEquil();
         }
     }
 }
@@ -160,12 +191,8 @@ void Core::updateRedoxInMatrix(double potential)
         Kox =  (sz->deltaX) * redox->getKeNorm() * exp((1.0 - redox->getAlpha()) * p); // B-V kinetics
 
         // add terms to matrix per redox reaction:
-        msys.setValue( redox->getSpecOx()->getIndex(), 0,
-                          redox->getSpecRed()->getIndex(), 0,
-                          -Kox / redox->getSpecOx()->getDiffNorm() );   // B0
-        msys.setValue( redox->getSpecRed()->getIndex(), 0,
-                          redox->getSpecOx()->getIndex(), 0, 
-                          -Kred / redox->getSpecRed()->getDiffNorm() ); // B0
+        msys.setValue(  redox->getSpecOx()->getIndex(), 0, redox->getSpecRed()->getIndex(), 0, -Kox / redox->getSpecOx()->getDiffNorm() );   // B0
+        msys.setValue( redox->getSpecRed()->getIndex(), 0, redox->getSpecOx()->getIndex(),  0, -Kred / redox->getSpecRed()->getDiffNorm() ); // B0
 
         // add to diagonal terms:
         matrixB0DiagonalTerms[redox->getSpecOx()->getIndex()] += Kred / redox->getSpecOx()->getDiffNorm();
@@ -192,7 +219,7 @@ double Core::calcCurrentFromFlux()
     {
         speciesflux = 0;
         for(size_t x = 0; x < sz->numCurrentPoints; x++)
-            speciesflux += coeffBeta0[x] * gridConcentration(x, spec->getIndex());
+            speciesflux += sz->coeffBeta0[x] * gridConcentration(x, spec->getIndex());
         currentContributionSpeciesFlux[spec->getIndex()] = speciesflux * spec->getDiffNorm();
     }
 
@@ -233,38 +260,14 @@ double Core::calcCurrentFromFlux()
 
 void Core::initVectorsEtc()
 {
-    // initialize independent terms and b & x vectors:
+    // initialize independent terms and grid concentrations:
     independentTerms = Eigen::MatrixXd::Zero(sz->numGridPoints, sz->numSpecies);
     gridConcentration = Eigen::MatrixXd(sz->numGridPoints, sz->numSpecies);
     gridConcentrationPrevious = Eigen::MatrixXd::Zero(sz->numGridPoints, sz->numSpecies);
-    
-    // initialize distance in grid, expansion factor gamma and concentration vectors:
-    gridCoordinate.resize(sz->numGridPoints);
-    paramGammai.resize(sz->numGridPoints);
-    paramGamma2i.resize(sz->numGridPoints);
+    // load in starting concentrations:
     for (size_t x = 0; x < sz->numGridPoints; x++)
-    {
-        paramGammai[x] = pow(sz->paramGamma, x);
-        paramGamma2i[x] = paramGammai[x]*paramGammai[x];
-        gridCoordinate[x] = (x == 0) ? 0.0 : gridCoordinate[x-1] + (sz->deltaX)*paramGammai[x-1];
-
         for (auto spec: sys->vecSpecies)
             gridConcentration(x, spec->getIndex()) = spec->getConcNormEquil();
-    }
-    
-    // obtain flux condition coefficients:
-    coeffBeta0.resize(sz->numCurrentPoints);
-    for(size_t i = 0; i < sz->numCurrentPoints; i++)
-        coeffBeta0[i] = Beta_N_1(sz->numCurrentPoints, i, sz->paramGamma);
-    
-    // obtain diffusion coefficients:
-    coeffAlpha.resize(sz->numDerivPoints);
-    coeffBeta.resize(sz->numDerivPoints);
-    for(size_t d = 0; d < sz->numDerivPoints; d++)
-    {
-        coeffAlpha[d] = Alpha_N_2(sz->numDerivPoints, d-1, sz->paramGamma);
-        coeffBeta[d]  =  Beta_N_2(sz->numDerivPoints, d-1, sz->paramGamma);
-    }
 
     // initilize redox/current vectors & matrix:
     speciesInRedox.clear();
@@ -314,7 +317,7 @@ void Core::addFirstOrderKineticTerm(Species *spec1, Species *spec2, double normr
 {
     if (abs(normrate) > MIN_RATE && spec2 != nullptr)
         for(size_t x = 1; x < sz->numGridPoints; x++)
-            msys.setValue(spec2->getIndex(), x, spec1->getIndex(), x, normrate*(sz->deltaX)*(sz->deltaX)*paramGamma2i[x]);
+            msys.setValue(spec2->getIndex(), x, spec1->getIndex(), x, normrate*sz->paramGamma2i2dX[x]);
 }
 
 void Core::addSecondOrderKineticTerm(Species *spec1, Species *spec2, Species *spec3, double normrate)
@@ -340,7 +343,7 @@ void Core::addRedoxToMatrix(double ip)
     for (size_t s = 0; s < sz->numSpecies; s++)
         if (!speciesInRedox[s])
             for (size_t x = 0; x < sz->numCurrentPoints; x++)
-                msys.setValue(s, 0, s, x, coeffBeta0[x]/(sz->deltaX));
+                msys.setValue(s, 0, s, x, sz->coeffBeta0[x]/sz->deltaX);
 
     updateRedoxInMatrix(ip);
 }
@@ -348,7 +351,7 @@ void Core::addRedoxToMatrix(double ip)
 void Core::addBICoeffsToMatrix() // Backwards Implicit coefficients
 {
     size_t relidx_max;
-    for (auto spec: sys->vecSpecies)
+    for (size_t s = 0; s < sz->numSpecies; s++)
     {
         for (size_t x = 1; x < sz->numGridPoints; x++) // since x == 0 corresponds to the boundary condition
         {
@@ -356,23 +359,9 @@ void Core::addBICoeffsToMatrix() // Backwards Implicit coefficients
             relidx_max = std::min(sz->numDerivPoints-1, sz->numGridPoints-x);
             
             for (int relidx = -1; relidx < static_cast<int>(relidx_max); relidx++)
-            {
-                msys.setValue(spec->getIndex(), x, spec->getIndex(), x+relidx,
-                                 coeffMatrixN2(x, relidx, spec->getDiffNorm()));
-            }
+                msys.setValue(s, x, s, x+relidx, sz->coeffN2[s](x, relidx+1));
         }
     }
-}
-
-double Core::coeffMatrixN2(size_t x, int relative_position, double diffnorm)
-{
-    size_t coeffidx = static_cast<size_t>(relative_position+1); // relative_position >= -1
-    
-    double coeff = coeffAlpha[coeffidx] + (sz->electrodeGeometryFactor)*(sz->deltaX)*paramGammai[x]/((sz->paramR0)+gridCoordinate[x])*coeffBeta[coeffidx];
-    coeff *= diffnorm; // Compton page 88/89
-    coeff -= (relative_position == 0) ? paramGamma2i[x]/(sz->paramLambda) : 0.0;
-    
-    return coeff;
 }
 
 /*===============================================================================================
@@ -380,11 +369,11 @@ double Core::coeffMatrixN2(size_t x, int relative_position, double diffnorm)
  *=============================================================================================*/
 
 using namespace std::placeholders;
-    
+
 void MatrixSystem::initialize(Sizing *new_sz)
 {
     sz = new_sz;
-    size_t numNonZeroesTotal = 15*sz->mainDimension;  // estimation (15 > 2*numDerivPoints)
+    const size_t numNonZeroesTotal = 15*sz->mainDimension;  // estimation (15 > 2*numDerivPoints)
     
     vecb = Eigen::VectorXd::Zero(sz->mainDimension);
     vecx = Eigen::VectorXd::Zero(sz->mainDimension);
