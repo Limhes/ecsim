@@ -12,11 +12,6 @@
 #include <eigen3/Eigen/SparseLU>
 #include <eigen3/Eigen/Core>
 
-using namespace std;
-
-using Triplet = Eigen::Triplet<double>; //triplets (row, column, value) to fill sparse matrix
-using Solver  = Eigen::SparseLU<Eigen::SparseMatrix<double>>;  //Turns out that SparseLU is actually fast enough, but only when running as Release :)
-
 const double MIN_RATE = 1.0e-6; // minimal rate > 1e-6 /s seems reasonable (as in: no rate will ever be smaller than this)
 const double MIN_CONC = 1.0e-9; // minimal (initial!) concentration > 1 pM (because /1000) seems reasonable
 const double MIN_AREA = 1.0e-18; // minimal electrode area > 1 nm2 seems reasonable
@@ -48,44 +43,50 @@ public:
     // conversion:
     double currentFromFlux; // to calculate current from species' flux
     // sizes of system parts:
-    size_t numSpecies, numRedox, numReactions;
-    size_t numGridPoints, numCurrentPoints = 5, numDerivPoints = 6; // number of points in grid, number of points for calculation of current, number of points for diffusion
-    size_t mainDimension; // used heavily: numSpecies*numGridPoints
+    std::size_t numSpecies, numRedox, numReactions;
+    std::size_t numGridPoints, numCurrentPoints = 5, numDerivPoints = 6; // number of points in grid, number of points for calculation of current, number of points for diffusion
+    std::size_t mainDimension; // used heavily: numSpecies*numGridPoints
     /*
      * COEFFICIENTS & COORDINATES
      */
-    vector<double> paramGamma2i2dX; // (grid expansion factor^x * deltaX)^2, pre-calculated for all points in grid
-    vector<double> coeffBeta0; // coefficients for current (beta0)
-    vector<Eigen::MatrixXd> coeffN2; // matrix storing all the pre-calculated diffusion coefficients
+    std::vector<double> paramGamma2i2dX; // (grid expansion factor^x * deltaX)^2, pre-calculated for all points in grid
+    std::vector<double> coeffBeta0; // coefficients for current (beta0)
+    std::vector<Eigen::MatrixXd> coeffN2; // matrix storing all the pre-calculated diffusion coefficients
     
     /*
      * METHODS
      */
-    double initialize(System*, Electrode*, Environment*, Experiment*, ostream &);
+    double initialize(System*, Electrode*, Environment*, Experiment*, std::ostream &);
 };
+
+using Triplet = Eigen::Triplet<double>; //triplets (row, column, value) to fill sparse matrix
+using Solver  = Eigen::SparseLU<Eigen::SparseMatrix<double>>;  //Turns out that SparseLU is actually fast enough, but only when running as Release :)
 
 class MatrixSystem
 {
 private:
     Sizing* sz;
     
-    vector<Triplet> tripletContainerMatrixA; // this container holds (row, col, value) triplets before matrixA is assembled
+    std::vector<Triplet> tripletContainerMatrixA; // this container holds (row, col, value) triplets before matrixA is assembled
     Eigen::SparseMatrix<double> matrixA; // matrix to be inverted: Ax=b corresponds to matrixA * vecx = vecb
     Eigen::VectorXd vecb, vecx; // vectors, defininition see above
     Solver sparseMatrixSolver; // solver that inverts the sparse matrixA using LU factorization
     
     bool matrixPatternAnalyzed;
     
-    inline size_t idx(size_t s, size_t x) { return (s*(sz->numGridPoints)+x); };
-    inline void setValueMatrix(size_t s1, size_t g1, size_t s2, size_t g2, double value) { matrixA.coeffRef(idx(s1,g1), idx(s2,g2)) = value; };
-    inline void setValueTriplet(size_t s1, size_t g1, size_t s2, size_t g2, double value) { tripletContainerMatrixA.push_back(Triplet( idx(s1,g1), idx(s2,g2), value)); };
+    inline std::size_t idx(std::size_t s, std::size_t x) { return (s*(sz->numGridPoints)+x); };
+    inline void setValueMatrix(std::size_t s1, std::size_t g1, std::size_t s2, std::size_t g2, double value)
+        { matrixA.coeffRef(idx(s1,g1), idx(s2,g2)) = value; };
+    inline void setValueTriplet(std::size_t s1, std::size_t g1, std::size_t s2, std::size_t g2, double value)
+        { tripletContainerMatrixA.push_back(Triplet( static_cast<int>(idx(s1,g1)), static_cast<int>(idx(s2,g2)), value)); };
 public:
     void initialize(Sizing*);
     
     void solve(Eigen::MatrixXd*, Eigen::MatrixXd*);
     void createMatrix();
-    inline void addToValue(size_t s1, size_t g1, size_t s2, size_t g2, double value) { matrixA.coeffRef(idx(s1,g1), idx(s2,g2)) += value; };
-    std::function<void(size_t, size_t, size_t, size_t, double)> setValue;
+    inline void addToValue(std::size_t s1, std::size_t g1, std::size_t s2, std::size_t g2, double value)
+        { matrixA.coeffRef(idx(s1,g1), idx(s2,g2)) += value; };
+    std::function<void(std::size_t, std::size_t, std::size_t, std::size_t, double)> setValue;
 };
 
 class Core
@@ -100,10 +101,10 @@ private:
     
     // matrix that stores the 2nd order kinetic interactions (needed for Laasonen linearization)
     // secondOrderKinetics[] = {A, B, C, normalized_rate} for the 2nd order reaction A+B<->C
-    vector<tuple<size_t, size_t, size_t, double>> secondOrderKinetics;
-    vector<tuple<size_t, size_t, double>> firstOrderKinetics;
-    vector<bool> speciesInRedox;
-    vector<double> matrixB0DiagonalTerms;
+    std::vector<std::tuple<std::size_t, std::size_t, std::size_t, double>> secondOrderKinetics;
+    std::vector<std::tuple<std::size_t, std::size_t, double>> firstOrderKinetics;
+    std::vector<bool> speciesInRedox;
+    std::vector<double> matrixB0DiagonalTerms;
     Eigen::MatrixXd currentContributionMatrix;
     Eigen::VectorXd currentContributionSpeciesFlux, currentContributionRedoxFlux;
 public:

@@ -2,7 +2,7 @@
 #include "electrodes.h"
 
 extern const double CONST_PI; // in simulation.h
-extern const string NO_GEOM; // in electrodes.h
+extern const std::string NO_GEOM; // in electrodes.h
 
 void Electrode::update()
 {
@@ -36,9 +36,9 @@ void Electrode::update()
         electrodeGeometryFactor = 2.0;
         electrodeArea = 2*CONST_PI*m_geom1*m_geom1;
     }
-    epsilon = sqrt(electrodeArea);
+    epsilon = std::sqrt(electrodeArea);
 }
 
-const vector<string> Electrode::electrodeTypes({"Disk", "Square", "Rectangle", "Cylinder", "Sphere", "Hemisphere"});
-const vector<string> Electrode::electrodeGeom1({"Radius", "Width", "Width", "Radius", "Radius", "Radius"});
-const vector<string> Electrode::electrodeGeom2({NO_GEOM, NO_GEOM, "Length", "Length", NO_GEOM, NO_GEOM});
+const std::vector<std::string> Electrode::electrodeTypes({"Disk", "Square", "Rectangle", "Cylinder", "Sphere", "Hemisphere"});
+const std::vector<std::string> Electrode::electrodeGeom1({"Radius", "Width", "Width", "Radius", "Radius", "Radius"});
+const std::vector<std::string> Electrode::electrodeGeom2({NO_GEOM, NO_GEOM, "Length", "Length", NO_GEOM, NO_GEOM});

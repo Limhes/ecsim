@@ -1,21 +1,20 @@
 #include "system.h"
 #include <cmath>
 #include <iostream>
-//#include <algorithm>
 #include <array>
 
 /*===============================================================================================
  * ADD REDOX STEPS, HOMOGENEOUS REACTIONS TO SYSTEM
  *=============================================================================================*/
 
-vector<double>::size_type System::addRedox(Redox *redox)
+std::vector<double>::size_type System::addRedox(Redox *redox)
 {
     // add redox to system:
     vecAllRedox.push_back(redox);
     return vecAllRedox.size();
 }
 
-vector<double>::size_type System::addReaction(Reaction *rxn)
+std::vector<double>::size_type System::addReaction(Reaction *rxn)
 {
     // add reaction to system:
     vecAllReactions.push_back(rxn);
@@ -150,7 +149,7 @@ void System::calcMaxRateConstants(double epsilon)
     }
 }
 
-int System::equilibrateConcentrations()
+unsigned int System::equilibrateConcentrations()
 {
     /*
      * since we do not know what type of system we have to equilibrate, we have to simulate it using forward and backward reactions
@@ -161,11 +160,12 @@ int System::equilibrateConcentrations()
     const double V_SHRINK = 0.3;
     const double V_GROW = 1.1;
 
-    int underflow, unstable, iter = 0;
+    unsigned int underflow, unstable, iter = 0;
     double delta_conc, f, b, minConc1 = 0.0, minConc2 = 0.0;
     double dt = 0.1; // kf, kb, conc are dimensionless!
     
-    size_t idx, num_spec = vecSpecies.size();
+    std::size_t idx;
+    const std::size_t num_spec = vecSpecies.size();
     std::vector<double> Del(num_spec), conc(num_spec), equilconc(num_spec);
     
     for (idx = 0; idx < num_spec; idx++)

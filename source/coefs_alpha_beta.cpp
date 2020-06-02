@@ -1,159 +1,149 @@
+/*
+ * this file is a close to one-on-one copy from the supporting information of Molina et al. (10.1016/j.cplett.2015.11.011)
+ * changes:
+ * - parameter list changed so that N and M are of type std::size_t & index is of type int & gamma is of type double
+ * 
+ * analytical expressions for the coefficients can be found in 10.1016/j.electacta.2008.08.039
+ */
+
 
 #include "coefs_alpha_beta.h"
 //Alpha_N_M() and Beta_N_M() can be used to call all functions for forms (N,M)
 
-double Alpha_N_M(int N, int M,int index, double gamma)
+double Alpha_N_M(std::size_t N, std::size_t M, int index, double gamma)
 {
     switch (M)
-         {
-        case 1:return Alpha_N_1(N,index,gamma);
-         case 2:return Alpha_N_2(N,index,gamma);
-         case 3:return Alpha_N_3(N,index,gamma);
-         case 4:return Alpha_N_4(N,index,gamma);
-         case 5:return Alpha_N_5(N,index,gamma);
-         default: return 0.;
-
-
-         }
+    {
+        case 1: return Alpha_N_1(N,index,gamma);
+        case 2: return Alpha_N_2(N,index,gamma);
+        case 3: return Alpha_N_3(N,index,gamma);
+        case 4: return Alpha_N_4(N,index,gamma);
+        case 5: return Alpha_N_5(N,index,gamma);
+        default: return 0.0;
+    }
 }
-double Beta_N_M(int N, int M,int index, double gamma)
+double Beta_N_M(std::size_t N, std::size_t M, int index, double gamma)
 {
     switch (M)
-         {
-         case 1:return Beta_N_1(N,index,gamma);
-         case 2:return Beta_N_2(N,index,gamma);
-         case 3:return Beta_N_3(N,index,gamma);
-         case 4:return Beta_N_4(N,index,gamma);
-         case 5:return Beta_N_5(N,index,gamma);
-         default: return 0.;
-
-
-         }
-}
-double Alpha_N_2(int N,int index, double gamma)
-{
-    switch(N)
     {
-    case 3:return Alpha_3_2(index,gamma);
-    case 4:return Alpha_4_2(index,gamma);
-    case 5:return Alpha_5_2(index,gamma);
-    case 6:return Alpha_6_2(index,gamma);
-    case 7:return Alpha_7_2(index,gamma);
-    case 8:return Alpha_8_2(index,gamma);
-    default: return 0.;
+        case 1: return Beta_N_1(N,index,gamma);
+        case 2: return Beta_N_2(N,index,gamma);
+        case 3: return Beta_N_3(N,index,gamma);
+        case 4: return Beta_N_4(N,index,gamma);
+        case 5: return Beta_N_5(N,index,gamma);
+        default: return 0.0;
     }
 }
-double Alpha_N_1(int N,int index, double gamma)
+double Alpha_N_2(std::size_t N, int index, double gamma)
 {
     switch(N)
     {
-    case 3:return Alpha_3_1(index,gamma);
-    case 4:return Alpha_4_1(index,gamma);
-    case 5:return Alpha_5_1(index,gamma);
-   // case 6:return Alpha_6_1(index,gamma);
-   // case 7:return Alpha_7_1(index,gamma);
-   // case 8:return Alpha_8_1(index,gamma);
-    default: return 0.;
+        case 3: return Alpha_3_2(index,gamma);
+        case 4: return Alpha_4_2(index,gamma);
+        case 5: return Alpha_5_2(index,gamma);
+        case 6: return Alpha_6_2(index,gamma);
+        case 7: return Alpha_7_2(index,gamma);
+        case 8: return Alpha_8_2(index,gamma);
+        default: return 0.0;
     }
 }
-
-double Alpha_N_3(int N,int index, double gamma)
+double Alpha_N_1(std::size_t N, int index, double gamma)
 {
     switch(N)
     {
-    case 3:return Alpha_3_3(index,gamma);
-    case 4:return Alpha_4_3(index,gamma);
-    case 5:return Alpha_5_3(index,gamma);
-    case 6:return Alpha_6_3(index,gamma);
-
-    default: return 0.;
-    }
-}
-double Alpha_N_4(int N,int index, double gamma)
-{
-    switch(N)
-    {
-
-    case 4:return Alpha_4_4(index,gamma);
-    case 5:return Alpha_5_4(index,gamma);
-    case 6:return Alpha_6_4(index,gamma);
-
-    default: return 0.;
+        case 3: return Alpha_3_1(index,gamma);
+        case 4: return Alpha_4_1(index,gamma);
+        case 5: return Alpha_5_1(index,gamma);
+        // case 6: return Alpha_6_1(index,gamma);
+        // case 7: return Alpha_7_1(index,gamma);
+        // case 8: return Alpha_8_1(index,gamma);
+        default: return 0.0;
     }
 }
 
-double Alpha_N_5(int N,int index, double gamma)
+double Alpha_N_3(std::size_t N,int index, double gamma)
 {
     switch(N)
     {
-
-    case 5:return Alpha_5_5(index,gamma);
-    case 6:return Alpha_6_5(index,gamma);
-
-    default: return 0.;
+        case 3: return Alpha_3_3(index,gamma);
+        case 4: return Alpha_4_3(index,gamma);
+        case 5: return Alpha_5_3(index,gamma);
+        case 6: return Alpha_6_3(index,gamma);
+        default: return 0.0;
     }
 }
-double Beta_N_2(int N,int index, double gamma)
+double Alpha_N_4(std::size_t N,int index, double gamma)
 {
     switch(N)
     {
-    case 3:return Beta_3_2(index,gamma);
-    case 4:return Beta_4_2(index,gamma);
-    case 5:return Beta_5_2(index,gamma);
-    case 6:return Beta_6_2(index,gamma);
-    case 7:return Beta_7_2(index,gamma);
-
-    default: return 0.;
+        case 4: return Alpha_4_4(index,gamma);
+        case 5: return Alpha_5_4(index,gamma);
+        case 6: return Alpha_6_4(index,gamma);
+        default: return 0.0;
     }
 }
-double Beta_N_3(int N,int index, double gamma)
+
+double Alpha_N_5(std::size_t N,int index, double gamma)
 {
     switch(N)
     {
-    case 3:return Beta_3_3(index,gamma);
-    case 4:return Beta_4_3(index,gamma);
-    case 5:return Beta_5_3(index,gamma);
-    case 6:return Beta_6_3(index,gamma);
-
-    default: return 0.;
+        case 5: return Alpha_5_5(index,gamma);
+        case 6: return Alpha_6_5(index,gamma);
+        default: return 0.0;
     }
 }
-double Beta_N_4(int N,int index, double gamma)
+double Beta_N_2(std::size_t N,int index, double gamma)
 {
     switch(N)
     {
-
-    case 4:return Beta_4_4(index,gamma);
-    case 5:return Beta_5_4(index,gamma);
-    case 6:return Beta_6_4(index,gamma);
-
-    default: return 0.;
+        case 3: return Beta_3_2(index,gamma);
+        case 4: return Beta_4_2(index,gamma);
+        case 5: return Beta_5_2(index,gamma);
+        case 6: return Beta_6_2(index,gamma);
+        case 7: return Beta_7_2(index,gamma);
+        default: return 0.0;
     }
 }
-double Beta_N_5(int N,int index, double gamma)
+double Beta_N_3(std::size_t N,int index, double gamma)
 {
     switch(N)
     {
-
-
-    case 5:return Beta_5_5(index,gamma);
-    case 6:return Beta_6_5(index,gamma);
-
-    default: return 0.;
+        case 3: return Beta_3_3(index,gamma);
+        case 4: return Beta_4_3(index,gamma);
+        case 5: return Beta_5_3(index,gamma);
+        case 6: return Beta_6_3(index,gamma);
+        default: return 0.0;
     }
 }
-double Beta_N_1(int N,int index, double gamma)
+double Beta_N_4(std::size_t N,int index, double gamma)
 {
     switch(N)
     {
-    case 2:return (index==0)?-1.0:1.0; // added by Rene for 2-point current approximation
-    case 3:return Beta_3_1(index,gamma);
-    case 4:return Beta_4_1(index,gamma);
-    case 5:return Beta_5_1(index,gamma);
-    case 6:return Beta_6_1(index,gamma);
-
-
-    default: return 0.;
+        case 4: return Beta_4_4(index,gamma);
+        case 5: return Beta_5_4(index,gamma);
+        case 6: return Beta_6_4(index,gamma);
+        default: return 0.0;
+    }
+}
+double Beta_N_5(std::size_t N,int index, double gamma)
+{
+    switch(N)
+    {
+        case 5: return Beta_5_5(index,gamma);
+        case 6: return Beta_6_5(index,gamma);
+        default: return 0.0;
+    }
+}
+double Beta_N_1(std::size_t N,int index, double gamma)
+{
+    switch(N)
+    {
+        case 2: return (index == 0) ? -1.0 : 1.0; // added by Rene for 2-point current approximation
+        case 3: return Beta_3_1(index,gamma);
+        case 4: return Beta_4_1(index,gamma);
+        case 5: return Beta_5_1(index,gamma);
+        case 6: return Beta_6_1(index,gamma);
+        default: return 0.0;
     }
 }
 

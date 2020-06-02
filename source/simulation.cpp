@@ -5,7 +5,7 @@
  * HIGHEST LEVEL CLASS METHODS
  *=============================================================================================*/
 
-size_t Simulation::run(vector<double> &current, vector<double> &potential)
+size_t Simulation::run(std::vector<double> &current, std::vector<double> &potential)
 {
     // finalize system (variable normalization, thermal equilibration):
     sys.finalize(el.epsilon);
@@ -20,7 +20,7 @@ size_t Simulation::run(vector<double> &current, vector<double> &potential)
     Epc = 0.0;
     Epa = 0.0;
 
-    auto startTime = std::chrono::high_resolution_clock::now();
+    const auto startTime = std::chrono::high_resolution_clock::now();
     
     // conditioning step:
     delaySegment(exper.conditioningPotential, exper.conditioningTime);
@@ -31,7 +31,7 @@ size_t Simulation::run(vector<double> &current, vector<double> &potential)
     // scan cycles:
     double segmentStartPotential; // start potential of scan segment
     bool recordCurrent; // record current in segment?
-    for (int cycle = 0; cycle < exper.numCycles; cycle++) {
+    for (unsigned int cycle = 0; cycle < exper.numCycles; cycle++) {
         recordCurrent = (cycle == exper.numCycles - 1); // warning: hard-coded option to record current only of last cycle
 
         segmentStartPotential = exper.initialPotential;
@@ -46,10 +46,10 @@ size_t Simulation::run(vector<double> &current, vector<double> &potential)
         scanSegment(segmentStartPotential, exper.finalPotential, recordCurrent, current, potential);
     }
     
-    auto endTime = std::chrono::high_resolution_clock::now();
-    double elapsedTime = static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count())/1.0e9;
+    const auto endTime = std::chrono::high_resolution_clock::now();
+    const double elapsedTime = static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count())/1.0e9;
     
-    output_stream << "Est. simulation time (" << current.size() << " steps &amp; " << sz.numGridPoints << " grid points) = " << elapsedTime << " s<br />" << endl;
+    output_stream << "Simulation time = " << elapsedTime << " sec. (" << current.size() << " steps, " << sz.numGridPoints << " grid points)" << std::endl;
 
     return current.size();
 }
@@ -58,14 +58,14 @@ void Simulation::delaySegment(double pot, double time)
 {
     if (time > MIN_STEP_TIME)
     {
-        int num_points = static_cast<int>( time * exper.scanRate / deltaE );
+        const unsigned int num_points = static_cast<unsigned int>(std::round(time * exper.scanRate / deltaE));
         
-        for (int d = 0; d < num_points; d++)
+        for (unsigned int d = 0; d < num_points; d++)
             core.solveSystem(pot);
     }
 }
 
-void Simulation::scanSegment(double potential_start, double potential_stop, bool record_current, vector<double> &current, vector<double> &potential)
+void Simulation::scanSegment(double potential_start, double potential_stop, bool record_current, std::vector<double> &current, std::vector<double> &potential)
 {
     double curr;
 
@@ -73,9 +73,9 @@ void Simulation::scanSegment(double potential_start, double potential_stop, bool
     if (potential_start < potential_stop) sign = 1.0;
     else if (potential_start > potential_stop) sign = -1.0;
 
-    int num_points = static_cast<int>(abs(potential_start-potential_stop)/deltaE);
+    const unsigned int num_points = static_cast<unsigned int>(std::fabs(std::round(potential_start-potential_stop)/deltaE));
     double pot = potential_start;
-    for (int d = 0; d < num_points; d++)
+    for (unsigned int d = 0; d < num_points; d++)
     {
         // do magic:
         core.solveSystem(pot);
