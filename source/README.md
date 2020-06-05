@@ -4,7 +4,7 @@
 
 **Class hierarchy**
 
-![ecsim class hierarchy diagram](/doc/class-hierarchy.png)
+![ecsim class hierarchy diagram](/source/doc/class-hierarchy.png)
 
 **Main files**
 
