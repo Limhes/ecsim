@@ -2,6 +2,10 @@
 
 (Work in progress!)
 
+**Class hierarchy**
+
+![ecsim class hierarchy diagram](/doc/class-hierarchy.png)
+
 **Main files**
 
 `simulation.h/cpp` contains class Simulation, which is the main class you need to instantiate. This class is the interface between the simulation setup (system/species/redox/reaction, electrode, environment, experiment), the simulation algorithm, and the user. Uses *dimensioned* variables (V, s, ...). This class calls the core algorithm at each potential step.
