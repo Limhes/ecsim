@@ -7,9 +7,9 @@
 
 size_t Simulation::run(std::vector<double> &current, std::vector<double> &potential)
 {
-    // finalize system (variable normalization, thermal equilibration):
+    // finalize system (rate/conc/diff normalization, thermal equilibration):
     sys.finalize(el.epsilon);
-    // initialize system sizing (determine all sizing parameter for the simulation):
+    // initialize system sizing (parameter normalization and determination of all sizing parameters for the simulation):
     deltaE = sz.initialize(&sys, &el, &env, &exper, output_stream);
     // initialize simulation core ():
     core.initialize(&sz, &sys, exper.initialPotential);
@@ -73,7 +73,7 @@ void Simulation::scanSegment(double potential_start, double potential_stop, bool
     if (potential_start < potential_stop) sign = 1.0;
     else if (potential_start > potential_stop) sign = -1.0;
 
-    const unsigned int num_points = static_cast<unsigned int>(std::fabs(std::round(potential_start-potential_stop)/deltaE));
+    const unsigned int num_points = static_cast<unsigned int>(std::fabs(std::round((potential_start-potential_stop)/deltaE)));
     double pot = potential_start;
     for (unsigned int d = 0; d < num_points; d++)
     {
