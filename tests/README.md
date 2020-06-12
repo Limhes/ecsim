@@ -36,12 +36,15 @@ To run the test, install pytest and run `pytest -v test_reversible.py` which giv
 Since there are no analytical expressions to test a quasi-reversible redox couple
 against, this test is a VISUAL CHECK, and is not run with pytest.
 
-The functions generate_plot_X() will generate plots of parameter X at selected
+The functions `generate_plot_X()` will generate plots of parameter X at selected
 values of alpha and Lambda. An overlay of each plot (in blue) onto the corresponding
-figure from Bard & Faulkner is stored as test_quasireversible_X.png, where X is:
-    X = psi     Fig. 6.4.1
-    X = kappa   Fig. 6.4.2
-    X = ksi     Fig. 6.4.3 (used DeltaTheta = 0.05 to generate smoother graph)
+figure from Bard & Faulkner is stored as `test_quasireversible_X.png`, where X is:
+
+```
+X = psi     Fig. 6.4.1
+X = kappa   Fig. 6.4.2
+X = ksi     Fig. 6.4.3 (used DeltaTheta = 0.05 to generate smoother graph)
+```
 
 ![Psi vs Lambda](/tests/test_quasireversible_psi.png)
 
