@@ -90,7 +90,5 @@ for any other values than:
 n == 1                      n: #electrons in redox step [-]
 ```
 
-The test breaks for very asymmetric (alpha == 0.7) charge transfer at high scan rates (nu == 100.0) and very low heterogeneous rate constant (k_e == 1.0e-10). Could be either due to theory breaking or simulation breaking at these values.
-
-To run the test, install pytest and run `pytest -v test_irreversible.py` which gives on my laptop: `156 passed in 2.35s`
+To run the test, install pytest and run `pytest -v test_irreversible.py` which gives on my laptop: `162 passed in 2.87s`
 

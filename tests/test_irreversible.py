@@ -30,13 +30,9 @@ Fixed parameter because no theoretical values for peak current or potential coul
 for any other values than:
 n == 1                      n: #electrons in redox step [-]
 
-The test breaks for very asymmetric (alpha == 0.7) charge transfer at high scan rates
-(nu == 100.0) and very low heterogeneous rate constant (k_e == 1.0e-10). Could be either
-due to theory breaking or simulation breaking at these values.
-
 To run the test, install pytest and run `pytest -v test_irreversible.py` which gives on my
 laptop:
-======================= 156 passed in 2.35s ========================
+======================= 162 passed in 2.88s ========================
 
 """
 
@@ -57,11 +53,7 @@ for nu in [0.01, 1.0, 100.0]:
                 Lambda_max = np.power(10.0, -2.0*alpha)
                 k_e_max = Lambda_max*np.sqrt(np.power(Dox,1-alpha)*np.power(Dred,alpha)*F/R/T*nu)
                 for k_e in list(np.logspace(-10, np.log10(k_e_max)-0.5, num=3, endpoint=True)):
-                    # exclude specific test cases that fail:
-                    if alpha == 0.7 and nu == 100.0 and k_e == 1.0e-10:
-                        continue
-                    else:
-                        test_params.append([T, 1.0e-3, nu, alpha, k_e, 1.0, Dred, Dox])
+                    test_params.append([T, 1.0e-3, nu, alpha, k_e, 1.0, Dred, Dox])
 
 @pytest.mark.parametrize('T,r,nu,alpha,k_e,C,Dred,Dox', test_params)
 def test_irreversible(T, r, nu, alpha, k_e, C, Dred, Dox):
@@ -77,7 +69,7 @@ def test_irreversible(T, r, nu, alpha, k_e, C, Dred, Dox):
     rdx1 = ecs.Redox(ox, red, 1, 0.0, k_e, alpha).enable()
     sim.sys.addRedox(rdx1)
     
-    sim.exper.setScanPotentials(-0.5, [1.5], -0.5)
+    sim.exper.setScanPotentials(-0.5, [2.0], -0.5)
     sim.exper.setScanRate(nu)
 
     [potential, current] = sim.run()
