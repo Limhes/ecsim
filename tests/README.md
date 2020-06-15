@@ -108,8 +108,6 @@ Test script: `test_EC.py`
 
 Results: `test_EC_results.txt`
 
-Of the system Ox + n*e <-> Red <-> Prod
-
 This test makes sure that, for a reversible (Nernstian) redox couple followed by a chemical reaction, the simulation gives peak currents that deviate less than 1%/2.5% from the theoretical values and gives peak potentials that are within one step potential from the theoretical value.
 
 Following the nomenclature of Savéant, we have a reaction with k_f and k_b: equilibrium constant K = k_f/k_b and k = k_f+k_b. For the overall system we have the kinetic parameter lambda = R*T/F * k/nu. There are two well-defined regions: KP for ErCi and DE for ErCr with large K and large k. These are distinct cases, and will be treated separately.
@@ -137,6 +135,8 @@ for any other values than:
 ```
 n == 1                      n: #electrons in redox step [-]
 ```
+
+To run the test, install pytest and run `pytest -v test_EC.py` which gives on my laptop: `105 passed in 2.45s`
 
 #### ErCi
 
@@ -171,3 +171,56 @@ Selected parameter values from Fig. 2.1 (zone diagram for EC) from Savéant (Ele
 
 For all values in the DE zone, the ErCr peak current simulates within 1.5% error.
 In the center of the DE zone, the ErCr peak current simulates within 1% error.
+
+### Chemical reaction preceding charge transfer: CrEr
+
+Test script: `test_CE.py`
+
+Results: `test_CE_results.txt`
+
+This test makes sure that, for a chemical reaction followed by a reversible (Nernstian) charge transfer, the simulation gives peak currents that deviate less than 1%/1.5% from the theoretical values and gives peak potentials that are within one step potential from the theoretical value.
+
+Plateau current in the KP zone:
+
+![ip for CE_KP](/tests/formulae/formula_CE_KP_ip.png)
+
+Peak current/potential in the DE zone:
+
+![ip for CE_DE](/tests/formulae/formula_CE_DE_ip.png)
+
+![Ep for CE_DE](/tests/formulae/formula_CE_DE_Ep.png)
+
+The tests pass for any combination of parameters in the ranges:
+
+```
+1.0e-2 < nu < 1.0e3                     nu: CV scan rate [V/s]
+1.0e-3 < C < 1.0e3                      C: concentration [mol/m^3 or mM]
+```
+
+Fixed parameters that were tested in the reversible test case which were assumed to not
+influence the current test appreciably were:
+
+```
+T == 293.15                 T: temperature [K]
+r == 1.0e-3                 r: electrode radius [m]
+alpha == 0.5                alpha: symmetry factor of the redox step [-]
+D == 1.0e-9                 Dred & Dox & Dprod: diffusion coefficient [m/s^2]
+```
+
+Fixed parameter because no theoretical values for peak current or potential could be found
+for any other values than:
+
+```
+n == 1                      n: #electrons in redox step [-]
+```
+
+Tests pass only for values that are well outside the zone boundaries in Fig. 2.8 from Savéant (Elements of ...), implying that the zone transitions are wide, as opposed to the situation for the EC reaction. Visual inspection of simulated CE voltammograms in the transitional area confirmed this observation.
+
+Selected parameter values for which the tests hold:
+
+```
+DE: (loglambda, logK) in [(7.0, 1.0), (10.0, -1.5)]
+KP: (loglambda, logK) in [(3.0, -3.0), (3.0, -6.0), (4.5, -9.0)]
+```
+
+To run the test, install pytest and run `pytest -v test_CE.py` which gives on my laptop: `45 passed in 1.12s`
