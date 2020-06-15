@@ -13,6 +13,7 @@ Results: `test_Er_results.txt`
 This test makes sure that, for a reversible (Nernstian) redox couple, the simulation gives peak currents that deviate less than 1% from the Randles-Sevcik equation and gives peak potentials that are within one step potential from the theoretical value.
 
 ![ip for Er](/tests/formulae/formula_Er_ip.png)
+
 ![Ep for Er](/tests/formulae/formula_Er_Ep.png)
 
 The test passes for any combination of parameters in the ranges:
@@ -66,6 +67,7 @@ Results: `test_Ei_results.txt`
 This test makes sure that, for a fully irreversible redox couple, the simulation gives peak currents that deviate less than 1% from the theoretical value and gives peak potentials that are within one step potential from the theoretical value.
 
 ![ip for Ei](/tests/formulae/formula_Ei_ip.png)
+
 ![Ep for Ei](/tests/formulae/formula_Ei_Ep.png)
 
 The test passes for any combination of parameters in the ranges:
@@ -139,6 +141,7 @@ n == 1                      n: #electrons in redox step [-]
 #### ErCi
 
 ![ip for ErCi](/tests/formulae/formula_ErCi_ip.png)
+
 ![Ep for ErCi](/tests/formulae/formula_ErCi_Ep.png)
 
 Parameter values for ErCi (EC in KP):
@@ -156,6 +159,7 @@ In the center of the KP zone, the ErCi peak current simulates within 1% error.
 #### ErCr
 
 ![ip for ErCr](/tests/formulae/formula_ErCr_ip.png)
+
 ![Ep for ErCr](/tests/formulae/formula_ErCr_Ep.png)
 
 Parameter values for ErCr (EC in DE, which seamlessly transitions into DO to become indistinguishable from Er):
