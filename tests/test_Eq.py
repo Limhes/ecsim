@@ -13,7 +13,7 @@ against, this test is a VISUAL CHECK, and is not run with pytest.
 
 The functions generate_plot_X() will generate plots of parameter X at selected
 values of alpha and Lambda. An overlay of each plot (in blue) onto the corresponding
-figure from Bard & Faulkner is stored as test_quasireversible_X.png, where X is:
+figure from Bard & Faulkner is stored as test_Eq_X.png, where X is:
     X = psi     Fig. 6.4.1
     X = kappa   Fig. 6.4.2
     X = ksi     Fig. 6.4.3 (used DeltaTheta = 0.05 to generate smoother graph)
@@ -31,7 +31,7 @@ R = 8.31446
 T = 293.15
 f = F/R/T
 
-def simulate_quasireversible(T, r, nu, alpha, k_e, C, Dred, Dox, deltaTheta=0.2):
+def simulate_Eq(T, r, nu, alpha, k_e, C, Dred, Dox, deltaTheta=0.2):
     sim = ecs.Simulation(True)
     sim.env.setTemperature(T)
     sim.el.disk(r)

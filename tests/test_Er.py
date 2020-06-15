@@ -33,7 +33,7 @@ The test also breaks when very low temperatures (T << 100 K) are combined with n
 probably an intrinsic limitation of the simulator. Since these use cases seem rare (and not
 necessary, see previous note), I will not attempt to fix this.
 
-To run the test, install pytest and run `pytest -v test_reversible.py` which gives on my laptop:
+To run the test, install pytest and run `pytest -v test_Er.py` which gives on my laptop:
 ======================= 3402 passed in 74.92s (0:01:14) ========================
 
 """
@@ -59,7 +59,7 @@ for T in [100.0, 293.15, 800.0]:
                             test_params.append([T, r, nu, n, alpha, C, D, D])
 
 @pytest.mark.parametrize('T,r,nu,n,alpha,C,Dred,Dox', test_params)
-def test_reversible(T, r, nu, n, alpha, C, Dred, Dox):
+def test_Er(T, r, nu, n, alpha, C, Dred, Dox):
     global R, F
     f = float(n)*F/R/T
     

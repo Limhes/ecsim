@@ -30,7 +30,7 @@ Fixed parameter because no theoretical values for peak current or potential coul
 for any other values than:
 n == 1                      n: #electrons in redox step [-]
 
-To run the test, install pytest and run `pytest -v test_irreversible.py` which gives on my
+To run the test, install pytest and run `pytest -v test_Ei.py` which gives on my
 laptop:
 ======================= 162 passed in 2.88s ========================
 
@@ -56,7 +56,7 @@ for nu in [0.01, 1.0, 100.0]:
                     test_params.append([T, 1.0e-3, nu, alpha, k_e, 1.0, Dred, Dox])
 
 @pytest.mark.parametrize('T,r,nu,alpha,k_e,C,Dred,Dox', test_params)
-def test_irreversible(T, r, nu, alpha, k_e, C, Dred, Dox):
+def test_Ei(T, r, nu, alpha, k_e, C, Dred, Dox):
     global R, F
     f = (1-alpha)*F/R/T
     
