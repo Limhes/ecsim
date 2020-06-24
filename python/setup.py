@@ -3,7 +3,7 @@ from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
 
 class get_pybind_include(object):
@@ -103,17 +103,36 @@ class BuildExt(build_ext):
             ext.extra_link_args = link_opts
         build_ext.build_extensions(self)
 
+# read the contents of your README file
+from os import path
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.rst'), encoding='utf-8') as f:
+    long_description = f.read()
+
 setup(
     name='pyecsim',
     version=__version__,
     author='René Becker',
     author_email='limhes@gmail.com',
+    project_urls={
+        'Documentation': 'https://pyecsim.readthedocs.io/',
+        'Source': 'https://github.com/Limhes/ecsim',
+    },
     url='https://github.com/Limhes/ecsim/python',
-    description='Python wrapper around ECSim',
-    long_description='',
+    description='PyECsim: fast and general voltammetry simulation',
+    long_description=long_description,
+    long_description_content_type='text/x-rst',
     ext_modules=ext_modules,
     install_requires=['pybind11>=2.4'],
     setup_requires=['pybind11>=2.4'],
     cmdclass={'build_ext': BuildExt},
     zip_safe=False,
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "Development Status :: 4 - Beta",
+        "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+        "Operating System :: OS Independent",
+        "Topic :: Scientific/Engineering :: Chemistry",
+        "Intended Audience :: Science/Research",
+    ],
 )
