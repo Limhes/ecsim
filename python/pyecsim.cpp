@@ -1,4 +1,4 @@
-#include <pybind11/pybind11.h>
+﻿#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/iostream.h>
 namespace py = pybind11;
@@ -348,8 +348,8 @@ PYBIND11_MODULE(pyecsim, m) {
     __init__(verbose:bool) -> pyecsim.Simulation
     Create Simulation object
 
-    * The core of the simulation is an implementation of Molina et al. "Brute force (or not so brute) digital simulation in electrochemistry revisited" Chemical Physics Letters 643 (2016) 71–76 (DOI: 10.1016/j.cplett.2015.11.011)
-    * Various practicalities were implemented according to: Britz "Digital Simulation in Electrochemistry" and Compton "Understanding Voltammetry - Simulation of Electrode Processes"
+    * The core of the simulation is an implementation of Molina et al. <<Brute force (or not so brute) digital simulation in electrochemistry revisited>>
+    * Various practicalities were implemented according to: Britz <<Digital Simulation in Electrochemistry>> and Compton <<Understanding Voltammetry - Simulation of Electrode Processes>>
     * Second-order homogeneous reactions are implemented as Laasonen linearizations (Britz p. 165+)
     * Species concentrations are equilibrated before the simulation starts
     * Electron transfer is implemented as Butler-Volmer kinetics

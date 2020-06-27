@@ -20,6 +20,8 @@ Installing PyECsim is easy:
 # Quick-start
 -------------
 
+The below example is a minimal piece of code that simulates a charge transfer step (ox + e <-> red) coupled to a chemical reaction (ox <-> prod).
+
 Import PyECsim into your Python code (and matplotlib to plot the voltammogram):
 
 .. code-block:: python
@@ -31,22 +33,25 @@ Then create a simulator and species, a charge transfer step and a chemical react
 
 .. code-block:: python
 
-    sim = ecs.Simulation(True)
+    sim = ecs.Simulation(True) # or False to suppress output
 
-    red = ecs.Species('reduced species', 1.0, 1.0e-9)
+    red = ecs.Species('reduced species', 1.0, 1.0e-9) # name, concentration [mol/m3], diffusion coefficient [m2/s]
     ox = ecs.Species('oxidized species', 0.0, 1.0e-9)
     prod = ecs.Species('reaction product', 0.0, 1.0e-9)
-
-    sim.sys.addRedox( rdx1 := ecs.Redox(ox, red, 1, 0.0, 10.0, 0.5).enable() ) # Python >= 3.8
-    sim.sys.addReaction( rxn1 := ecs.Reaction(ox, None, prod, None, 5.0, 0.0).enable() ) # Python >= 3.8
+    
+    rdx1 = ecs.Redox(ox, red, 1, 0.0, 10.0, 0.5).enable() # ox, red, n, E_0 [V], k_e [m/s], alpha
+    sim.sys.addRedox( rdx1 )
+    
+    rxn1 = ecs.Reaction(ox, None, prod, None, 5.0, 0.0).enable() # reactant1, reactant2, product1, product2, k_f, k_b
+    sim.sys.addReaction( rxn1 )
 
 Lastly, we set the electrode type and radius, the voltammograms initial/vertex/final potentials and the scan rate:
 
 .. code-block:: python
 
-    sim.el.disk(1.0e-3)
-    sim.exper.setScanPotentials(-0.5, [0.5], -0.5)
-    sim.exper.setScanRate(1.0)
+    sim.el.disk(1.0e-3) # radius [m]
+    sim.exper.setScanPotentials(-0.5, [0.5], -0.5) # potentials [V]: initial, [0 or more vertices], final 
+    sim.exper.setScanRate(1.0) # scan rate [V/s]
 
 And then we can run the simulation and plot the results:
 
