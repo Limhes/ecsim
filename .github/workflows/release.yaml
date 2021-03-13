@@ -6,12 +6,39 @@ on:
       - '*'
 
 jobs:
-  release:
+  build:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
     runs-on: ${{ matrix.os }}
-    name: 'Release for ${{ matrix.os }}'
+    name: 'Build release for ${{ matrix.os }}'
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v2
+      - name: 'Build Linux Python artefacts'
+        uses: docker/build-push-action@v2
+        id: docker-build
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        with:
+          file: Dockerfile
+          push: false
+      - name: 'Extract Linux artefacts'
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          # This step is required because docker buildx build outputs are not working well.
+          # With buildx build outputs we could ask the docker engine to give us back the files
+          # but that hangs the build.
+          docker run --rm -v ${PWD}:/repo ${{ steps.docker-build.outputs.digest }} cp -rf /build-output /repo
+      - name: 'Archive artifacts'
+        uses: actions/upload-artifact@v2
+        with:
+          name: python-wheels-${{ matrix.os }}
+          path: |
+            build-output/*
+  release:
+    runs-on: ubuntu-latest
+    name: 'Create release'
+    needs: [build]
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@v2
@@ -19,18 +46,8 @@ jobs:
         with:
           python-version: '3.x'
           architecture: 'x64'
-      - name: 'Build python artefacts'
-        uses: docker/build-push-action@v2
-        id: docker-build
-        with:
-          file: Dockerfile
-          push: false
-      - name: 'Extract build artefacts'
-        run: |
-          # This step is required because docker buildx build outputs are not working well.
-          # With buildx build outputs we could ask the docker engine to give us back the files
-          # but that hangs the build.
-          docker run --rm -v ${PWD}:/repo ${{ steps.docker-build.outputs.digest }} cp -rf /build-output /repo
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
       - name: 'Generate changelog'
         id: changelog
         uses: metcalfc/changelog-generator@v0.4.4
