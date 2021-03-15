@@ -25,6 +25,10 @@ The code in this repository is built automatically using GitHub Actions workflow
 On every pull-request or commit(s) to the main branch a [build workflow](.github/workflows/build.yaml) is triggered to run the Python tests.
 
 On every git tag created (and pushed to the remote repository) a [release workflow](.github/workflows/release.yaml) is triggered to create a new release.
+```bash
+git tag -m "my-version"
+git push --tags 
+```
 The release workflow will first build both Linux and Windows artifacts, and then will collect those artifacts in a [GitHub release on this repository](https://github.com/Limhes/ecsim/releases).
 
 The building process for Linux leverages a docker image that contains multiple python versions.
