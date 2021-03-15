@@ -1,3 +1,5 @@
+[![Build the software](https://github.com/Limhes/ecsim/actions/workflows/build.yaml/badge.svg?branch=master)](https://github.com/Limhes/ecsim/actions/workflows/build.yaml)
+
 # ecsim
 
 Fast and general simulation of electrode processes coupled to homogeneous reactions
