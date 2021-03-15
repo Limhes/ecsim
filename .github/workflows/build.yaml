@@ -24,6 +24,8 @@ jobs:
           architecture: 'x64'
       - name: 'Build library egg'
         run: |
+          sudo apt-get update
+          sudo apt-get install -y libeigen3-dev
           cd python
           python setup.py install --user
       - name: 'Run tests'
