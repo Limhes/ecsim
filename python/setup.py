@@ -2,6 +2,7 @@
 from setuptools.command.build_ext import build_ext
 import sys
 import setuptools
+import os
 
 __version__ = '0.2.3-r2'
 
@@ -98,6 +99,11 @@ class BuildExt(build_ext):
                 opts.append('-fvisibility=hidden')
         elif ct == 'msvc':
             opts.append('/DVERSION_INFO=\\"%s\\"' % self.distribution.get_version())
+            if os.getenv('CI'): # in github actions ${CI} = true
+                # ${VCPKG_INSTALLATION_ROOT} is set on the windows runner
+                # see: https://github.com/actions/virtual-environments/blob/main/images/win/Windows2019-Readme.md
+                opts.append('/DCMAKE_TOOLCHAIN_FILE=\\"%s/scripts/buildsystems/vcpkg.cmake\\"' % os.getenv('VCPKG_INSTALLATION_ROOT'))
+                opts.append('-I%s/packages/eigen3_x64-windows/include' % os.getenv('VCPKG_INSTALLATION_ROOT'))
         for ext in self.extensions:
             ext.extra_compile_args = opts
             ext.extra_link_args = link_opts
