@@ -28,8 +28,8 @@ jobs:
           python setup.py install --user
       - name: 'Run tests'
         run: |
-        pip install --user pytest numpy matplotlib
-        python -m pytest tests/test_CE.py
-        python -m pytest tests/test_EC.py
-        python -m pytest tests/test_Ei.py
-        python -m pytest tests/test_Er.py
+          pip install --user pytest numpy matplotlib
+          python -m pytest tests/test_CE.py
+          python -m pytest tests/test_EC.py
+          python -m pytest tests/test_Ei.py
+          python -m pytest tests/test_Er.py
