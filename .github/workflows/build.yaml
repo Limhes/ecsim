@@ -22,5 +22,16 @@ jobs:
         with:
           python-version: '3.x'
           architecture: 'x64'
+      - name: 'Build library egg'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libeigen3-dev
+          cd python
+          python setup.py install --user
       - name: 'Run tests'
-        run: python -m test
+        run: |
+          pip install --user pytest numpy matplotlib
+          python -m pytest tests/test_CE.py
+          python -m pytest tests/test_EC.py
+          python -m pytest tests/test_Ei.py
+          python -m pytest tests/test_Er.py
