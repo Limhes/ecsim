@@ -78,7 +78,7 @@ jobs:
           python setup.py --version
           echo ::set-output name=artefact-version::$( python setup.py --version )
       - name: 'Download all workflow run artifacts'
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4.1.7
         with:
           path: 'artifacts'
       - name: 'Generate changelog'
